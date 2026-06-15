@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "NEAPO_94_toilets",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "The Pod", "payment_info": "Free", "accessible": "False", "radar": "False", "women": "True", "men": "True", "baby_change": "False", "Mon": "09:00-18:00", "Tue": "09:00-18:00", "Wed": "09:00-18:00", "Thu": "09:00-18:00", "Fri": "09:00-18:00", "Sat": "09:00-18:00", "Sun": "09:00-18:00", "index_right": 70, "park_offical_id": "NEAPO_94" }, "geometry": { "type": "Point", "coordinates": [ -3.827136755, 51.599666936 ] } }
+]
+}

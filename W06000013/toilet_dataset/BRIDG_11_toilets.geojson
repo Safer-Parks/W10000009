@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "BRIDG_11_toilets",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "Tesco Cowbridge Road", "payment_info": "Free", "accessible": "True", "radar": "Unknown", "women": "True", "men": "True", "baby_change": "Unknown", "Mon": "06:00-00:00", "Tue": "06:00-00:00", "Wed": "06:00-00:00", "Thu": "06:00-00:00", "Fri": "06:00-00:00", "Sat": "06:00-00:00", "Sun": "10:00-16:00", "index_right": 3, "park_offical_id": "BRIDG_11" }, "geometry": { "type": "Point", "coordinates": [ -3.568035223, 51.49754718 ] } }
+]
+}

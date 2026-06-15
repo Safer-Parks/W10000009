@@ -1,0 +1,9 @@
+{
+"type": "FeatureCollection",
+"name": "SWANS_94_toilets",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "Unknown", "payment_info": "Cost unknown", "accessible": "False", "radar": "Unknown", "women": "True", "men": "True", "baby_change": "True", "Mon": "Unknown", "Tue": "Unknown", "Wed": "Unknown", "Thu": "Unknown", "Fri": "Unknown", "Sat": "Unknown", "Sun": "Unknown", "index_right": 140, "park_offical_id": "SWANS_94" }, "geometry": { "type": "Point", "coordinates": [ -3.999918343, 51.596616543 ] } },
+{ "type": "Feature", "properties": { "name": "Blackpill Lido", "payment_info": "Free", "accessible": "True", "radar": "True", "women": "True", "men": "True", "baby_change": "True", "Mon": "Unknown", "Tue": "Unknown", "Wed": "Unknown", "Thu": "Unknown", "Fri": "Unknown", "Sat": "Unknown", "Sun": "Unknown", "index_right": 140, "park_offical_id": "SWANS_94" }, "geometry": { "type": "Point", "coordinates": [ -3.9949801, 51.5971603 ] } }
+]
+}

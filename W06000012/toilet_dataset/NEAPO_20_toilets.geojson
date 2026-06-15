@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "NEAPO_20_toilets",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "Unknown", "payment_info": "Free", "accessible": "False", "radar": "Unknown", "women": "Unknown", "men": "Unknown", "baby_change": "Unknown", "Mon": "Unknown", "Tue": "Unknown", "Wed": "Unknown", "Thu": "Unknown", "Fri": "Unknown", "Sat": "Unknown", "Sun": "Unknown", "index_right": 13, "park_offical_id": "NEAPO_20" }, "geometry": { "type": "Point", "coordinates": [ -3.8185493, 51.6387762 ] } }
+]
+}

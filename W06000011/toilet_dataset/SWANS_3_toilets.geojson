@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"name": "SWANS_3_toilets",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "The Secret Beach Bar  Kitchen", "payment_info": "Free", "accessible": "True", "radar": "False", "women": "True", "men": "True", "baby_change": "True", "Mon": "Unknown", "Tue": "Unknown", "Wed": "Unknown", "Thu": "Unknown", "Fri": "Unknown", "Sat": "Unknown", "Sun": "Unknown", "index_right": 53, "park_offical_id": "SWANS_3" }, "geometry": { "type": "Point", "coordinates": [ -3.965479732, 51.611414474 ] } },
+{ "type": "Feature", "properties": { "name": "Swansea University  Fulton House", "payment_info": "Cost unknown", "accessible": "False", "radar": "False", "women": "True", "men": "True", "baby_change": "False", "Mon": "00:00-00:00", "Tue": "00:00-00:00", "Wed": "00:00-00:00", "Thu": "00:00-00:00", "Fri": "00:00-00:00", "Sat": "00:00-00:00", "Sun": "00:00-00:00", "index_right": 53, "park_offical_id": "SWANS_3" }, "geometry": { "type": "Point", "coordinates": [ -3.980226517, 51.609610562 ] } },
+{ "type": "Feature", "properties": { "name": "Singleton Hospital  Main Entrance", "payment_info": "Cost unknown", "accessible": "False", "radar": "Unknown", "women": "True", "men": "True", "baby_change": "Unknown", "Mon": "09:00-17:00", "Tue": "09:00-17:00", "Wed": "09:00-17:00", "Thu": "09:00-17:00", "Fri": "09:00-17:00", "Sat": "09:00-17:00", "Sun": "09:00-17:00", "index_right": 53, "park_offical_id": "SWANS_3" }, "geometry": { "type": "Point", "coordinates": [ -3.985086679, 51.608594476 ] } }
+]
+}

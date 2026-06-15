@@ -1,0 +1,11 @@
+{
+"type": "FeatureCollection",
+"name": "SWANS_89_toilets",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "Langland Bay", "payment_info": "Cost unknown", "accessible": "True", "radar": "True", "women": "True", "men": "True", "baby_change": "Unknown", "Mon": "Unknown", "Tue": "Unknown", "Wed": "Unknown", "Thu": "Unknown", "Fri": "Unknown", "Sat": "Unknown", "Sun": "Unknown", "index_right": 132, "park_offical_id": "SWANS_89" }, "geometry": { "type": "Point", "coordinates": [ -4.010862708, 51.568427562 ] } },
+{ "type": "Feature", "properties": { "name": "Oystermouth Square", "payment_info": "Free", "accessible": "True", "radar": "True", "women": "True", "men": "True", "baby_change": "True", "Mon": "Unknown", "Tue": "Unknown", "Wed": "Unknown", "Thu": "Unknown", "Fri": "Unknown", "Sat": "Unknown", "Sun": "Unknown", "index_right": 132, "park_offical_id": "SWANS_89" }, "geometry": { "type": "Point", "coordinates": [ -3.99858476, 51.57601058 ] } },
+{ "type": "Feature", "properties": { "name": "Southend Gardens", "payment_info": "Free", "accessible": "True", "radar": "Unknown", "women": "True", "men": "True", "baby_change": "Unknown", "Mon": "Unknown", "Tue": "Unknown", "Wed": "Unknown", "Thu": "Unknown", "Fri": "Unknown", "Sat": "Unknown", "Sun": "Unknown", "index_right": 132, "park_offical_id": "SWANS_89" }, "geometry": { "type": "Point", "coordinates": [ -3.995356553, 51.573303726 ] } },
+{ "type": "Feature", "properties": { "name": "Rotherslade", "payment_info": "Cost unknown", "accessible": "True", "radar": "Unknown", "women": "True", "men": "True", "baby_change": "Unknown", "Mon": "09:00-17:00", "Tue": "09:00-17:00", "Wed": "09:00-17:00", "Thu": "09:00-17:00", "Fri": "09:00-17:00", "Sat": "09:00-17:00", "Sun": "09:00-17:00", "index_right": 132, "park_offical_id": "SWANS_89" }, "geometry": { "type": "Point", "coordinates": [ -4.006096787, 51.568014032 ] } }
+]
+}

@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "SWANS_748_toilets",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "Three Cliffs Coffee Shop", "payment_info": "Free", "accessible": "False", "radar": "Unknown", "women": "True", "men": "True", "baby_change": "Unknown", "Mon": "09:00-18:00", "Tue": "09:00-18:00", "Wed": "09:00-18:00", "Thu": "09:00-18:00", "Fri": "09:00-18:00", "Sat": "09:00-18:00", "Sun": "09:00-18:00", "index_right": 116, "park_offical_id": "SWANS_748" }, "geometry": { "type": "Point", "coordinates": [ -4.088467062, 51.567322237 ] } }
+]
+}

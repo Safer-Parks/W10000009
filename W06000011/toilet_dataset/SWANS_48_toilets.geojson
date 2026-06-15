@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "SWANS_48_toilets",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "Morriston", "payment_info": "Free", "accessible": "True", "radar": "True", "women": "True", "men": "True", "baby_change": "True", "Mon": "09:00-18:00", "Tue": "09:00-18:00", "Wed": "09:00-18:00", "Thu": "09:00-18:00", "Fri": "09:00-18:00", "Sat": "09:00-18:00", "Sun": "09:00-18:00", "index_right": 74, "park_offical_id": "SWANS_48" }, "geometry": { "type": "Point", "coordinates": [ -3.925160766, 51.662374088 ] } }
+]
+}
