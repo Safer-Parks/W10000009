@@ -1116,7 +1116,7 @@
                     // Store layer info for toggling
                     mapState.entrancesLayer = {
                         id: 'park-entrances',
-                        name: 'Park Entrances',
+                        name: 'Access and Exit Points',
                         layer: entranceMarkers,
                         visible: true
                     };
@@ -2085,7 +2085,7 @@
                     // Store layer info for toggling
                     mapState.featuresInParksLayer = {
                         id: 'features-in-parks',
-                        name: 'Features In Parks',
+                        name: 'Park Features',
                         layer: featuresGroup,
                         visible: false
                     };
@@ -2257,6 +2257,7 @@
                 // Remove existing demographics layer
                 if (mapState.demographicsLayer && mapState.demographicsLayer.layer) {
                     map.removeLayer(mapState.demographicsLayer.layer);
+                    mapState.demographicsLayer = null;
                 }
                 
                 const authPath = getAuthorityPath(mapState.currentAuthority.id);
@@ -2342,16 +2343,21 @@
                         }
                     });
                     
-                    // Store layer info for toggling
-                    mapState.demographicsLayer = {
-                        id: 'demographics',
-                        name: 'Demographics (15 min catchment)',
-                        layer: demographicsGroup,
-                        visible: false
-                    };
-                    
-                    console.log(`Loaded demographics data for ${park.name}`);
+                    // Only store layer if it has data
+                    if (demographicsGroup.getLayers().length > 0) {
+                        mapState.demographicsLayer = {
+                            id: 'demographics',
+                            name: 'Demographics Data',
+                            layer: demographicsGroup,
+                            visible: false
+                        };
+                        console.log(`Loaded demographics data for ${park.name}`);
+                    } else {
+                        mapState.demographicsLayer = null;
+                        console.log(`No demographics polygons created for park: ${park.name}`);
+                    }
                 } catch (error) {
+                    mapState.demographicsLayer = null;
                     console.log(`Demographics data not available for this authority (${authName})`);
                 }
             } catch (error) {
@@ -2829,8 +2835,16 @@
             if (mapState.streetLampsLayer && mapState.streetLampsLayer.visible) {
                 visibleLayers.push({
                     id: 'street-lamps',
-                    name: 'Street Lamps',
+                    name: 'Street Lighting',
                     type: 'street-lamps'
+                });
+            }
+            
+            if (mapState.demographicsLayer && mapState.demographicsLayer.visible) {
+                visibleLayers.push({
+                    id: 'demographics',
+                    name: 'Demographics (15 min catchment)',
+                    type: 'demographics'
                 });
             }
             
@@ -3182,6 +3196,30 @@
                     
                     lampsGroup.appendChild(lampsMarker);
                     legendItems.appendChild(lampsGroup);
+                    return;
+                } else if (layer.type === 'demographics') {
+                    // Create demographics legend
+                    const demographicsGroup = document.createElement('div');
+                    demographicsGroup.style.marginBottom = '0.75rem';
+                    
+                    // Create marker
+                    const demographicsMarker = document.createElement('div');
+                    demographicsMarker.style.display = 'flex';
+                    demographicsMarker.style.alignItems = 'center';
+                    demographicsMarker.style.gap = '0.5rem';
+                    
+                    const square = document.createElement('div');
+                    square.style.width = '16px';
+                    square.style.height = '16px';
+                    square.style.backgroundColor = '#9C27B0';
+                    square.style.opacity = '0.6';
+                    square.style.borderRadius = '2px';
+                    
+                    demographicsMarker.appendChild(square);
+                    demographicsMarker.appendChild(document.createTextNode('Demographics (15 min catchment)'));
+                    
+                    demographicsGroup.appendChild(demographicsMarker);
+                    legendItems.appendChild(demographicsGroup);
                     return;
                 }
                 
