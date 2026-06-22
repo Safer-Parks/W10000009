@@ -1,0 +1,3314 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Safer Parks Dashboard</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="css/icon-parks4.svg">
+    
+    <!-- Pico CSS Framework - Jade Palette -->
+    <link rel="stylesheet" href="css/pico.jade.min.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/light-theme.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    
+    <style>
+        /* Font imports */
+        @font-face {
+            font-family: 'MrDodo';
+            src: url('css/MrDodo-Regular.otf') format('opentype');
+        }
+        
+        /* Additional styles for Test-Region implementation */
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+        
+        aside {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 300px;
+            max-height: 90vh;
+            overflow-y: auto;
+            overflow-x: visible;
+        }
+        
+        /* Headline styling */
+        nav strong {
+            font-family: 'MrDodo', serif;
+            color: #572B70;
+            font-size: 1.2rem;
+        }
+        
+        /* Park name in nav */
+        #navParkName {
+            font-family: 'MrDodo', serif;
+            color: #572B70;
+            font-size: 1.2rem;
+        }
+        
+        /* Minimal basemap styling */
+        .minimal-basemap {
+            filter: grayscale(100%) brightness(1.15) contrast(0.9);
+        }
+        
+        /* Zoom controls padding */
+        .leaflet-bottom.leaflet-right {
+            padding-right: 5px;
+            padding-bottom: 35px;
+        }
+        
+        /* Hide Leaflet's default attribution control */
+        .leaflet-control-attribution {
+            display: none !important;
+        }
+        
+        /* Style floating attribution */
+        .floating-attribution {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            line-height: 1.4;
+        }
+        
+        .floating-attribution a {
+            color: inherit;
+            text-decoration: underline;
+        }
+        
+        /* Floating Scale Bar Styling */
+        .leaflet-control-scale {
+            position: fixed !important;
+            bottom: 0.5rem !important;
+            left: 50% !important;
+            transform: translateX(-50%);
+            margin-left: 200px !important;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 4px 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            font-family: system-ui, -apple-system, sans-serif;
+            z-index: 400;
+        }
+        
+        .leaflet-control-scale-line {
+            border: 2px solid #333;
+            border-top: none;
+            color: #333;
+            font-size: 11px;
+            line-height: 1.1;
+            padding: 2px 5px 1px;
+            background: transparent;
+            text-shadow: none;
+        }
+        
+        /* Layer toggles styling */
+        #dataLayerToggles {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        #dataLayerToggles label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        
+        #dataLayerToggles input[type="checkbox"] {
+            margin: 0;
+        }
+        
+        /* Accordion panel styling */
+        .accordion-panel {
+            display: block;
+            overflow: hidden;
+        }
+        
+        /* Legend item styling */
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+        }
+        
+        .legend-marker {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .legend-marker.outline {
+            border: 2px solid #4F6C37;
+            background: white;
+        }
+        
+        .legend-marker.filled {
+            background: #4F6C37;
+        }
+        
+        .legend-marker.circle {
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+        }
+        
+        .legend-marker.circle.primary {
+            background: #EE655F;
+        }
+        
+        .legend-marker.circle.secondary {
+            background: #95a5a6;
+        }
+        
+        /* Force legend positioning on right side */
+        aside#legendPanel {
+            position: fixed !important;
+            right: 10px !important;
+            top: 75px !important;
+            left: auto !important;
+            width: 250px !important;
+            max-width: none !important;
+            max-height: 90vh !important;
+            overflow-y: auto !important;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        /* Foliage tooltip styling */
+        .foliage-tooltip {
+            background: rgba(30, 125, 50, 0.95) !important;
+            color: white !important;
+            border-radius: 4px;
+            padding: 8px 12px !important;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .foliage-tooltip::before {
+            border-top-color: rgba(30, 125, 50, 0.95) !important;
+        }
+
+        /* Park tooltip styling */
+        .park-tooltip {
+            background: white !important;
+            color: black !important;
+            border-radius: 4px;
+            padding: 8px 12px !important;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .park-tooltip::before {
+            border-top-color: white !important;
+        }
+
+        /* NACH tooltip styling */
+        .nach-tooltip {
+            background: rgba(100, 100, 100, 0.95) !important;
+            color: white !important;
+            border-radius: 4px;
+            padding: 8px 12px !important;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .nach-tooltip::before {
+            border-top-color: rgba(100, 100, 100, 0.95) !important;
+        }
+
+        /* Toilet tooltip styling */
+        .toilet-tooltip {
+            background: rgba(0, 123, 255, 0.95) !important;
+            color: white !important;
+            border-radius: 4px;
+            padding: 8px 12px !important;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .toilet-tooltip::before {
+            border-top-color: rgba(0, 123, 255, 0.95) !important;
+        }
+
+        /* Cycling network tooltip styling */
+        .cycling-tooltip {
+            background: rgba(255, 107, 53, 0.95) !important;
+            color: white !important;
+            border-radius: 4px;
+            padding: 8px 12px !important;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .cycling-tooltip::before {
+            border-top-color: rgba(255, 107, 53, 0.95) !important;
+        }
+
+        /* Street lamp tooltip styling */
+        .street-lamp-tooltip {
+            background: rgba(255, 215, 0, 0.95) !important;
+            color: #333 !important;
+            border-radius: 4px;
+            padding: 8px 12px !important;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .street-lamp-tooltip::before {
+            border-top-color: rgba(255, 215, 0, 0.95) !important;
+        }
+
+        /* Features tooltip styling */
+        .features-in-parks-tooltip {
+            background: rgba(76, 175, 80, 0.95) !important;
+            color: white !important;
+            border-radius: 4px;
+            padding: 8px 12px !important;
+            font-size: 0.75rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .features-in-parks-tooltip::before {
+            border-top-color: rgba(76, 175, 80, 0.95) !important;
+        }
+
+        .features-near-parks-tooltip {
+            background: rgba(255, 152, 0, 0.95) !important;
+            color: white !important;
+            border-radius: 4px;
+            padding: 8px 12px !important;
+            font-size: 0.75rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .features-near-parks-tooltip::before {
+            border-top-color: rgba(255, 152, 0, 0.95) !important;
+        }
+
+        /* Toggle label spacing */
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        /* Space between adjacent toggle labels in accordion panel (regional level) */
+        .accordion-panel > .toggle-label + .toggle-label {
+            margin-top: 0.75rem;
+        }
+        
+        /* Navigation styling */
+        nav ul {
+            display: flex;
+            align-items: center;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            gap: 1rem;
+        }
+        
+        nav li a {
+            color: #572B70;
+            text-decoration: none;
+            font-weight: 500;
+            font-family: 'MrDodo', serif;
+        }
+        
+        nav li a:hover {
+            text-decoration: underline;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <ul>
+            <li><strong>The Safer Parks Dashboard</strong><span id="navParkName" style="display:none; margin-left: 2rem;"></span></li>
+            <li style="margin-left: auto;"><a href="https://murphyqm.github.io/Safer-Parks.github.io/guide.html" target="_blank" rel="noopener noreferrer">Layer guide</a></li>
+        </ul>
+    </nav>
+
+    <!-- Floating Sidebar -->
+    <aside aria-label="Park Controls" id="parkMenu">
+        <div class="accordion">
+            <h2>
+                <button 
+                    type="button" 
+                    aria-expanded="true" 
+                    class="accordion-trigger" 
+                    aria-controls="controls-content"
+                    id="controls-heading">
+                    <span class="accordion-title">Explore Parks</span>
+                    <span class="accordion-icon" aria-hidden="true"></span>
+                </button>
+            </h2>
+            <div id="controls-content" 
+                 role="region" 
+                 aria-labelledby="controls-heading" 
+                 class="accordion-panel">
+
+                <label for="localAuthority">Select an Authority/Area:</label>
+                <select name="localAuthority" id="localAuthority">
+                    <option value="">-- Select an authority --</option>
+                </select>
+
+                <label for="parks">Parks in selected authority:</label>
+                <select name="parks" id="parks" disabled>
+                    <option value="">-- Select an authority first --</option>
+                </select>
+
+                <button id="loadPark" class="primary" style="width:100%" disabled>Load Park</button>
+                
+                <hr>
+                
+                <label class="toggle-label">
+                    <input type="checkbox" id="detailedToggle" role="switch" aria-label="Toggle detailed basemap on or off"/>
+                    <span>Coloured Basemap</span>
+                </label>
+                
+                <label class="toggle-label">
+                    <input type="checkbox" id="cyclingNetworkToggle" role="switch" aria-label="Toggle national cycling network on or off"/>
+                    <span>National Cycling Network</span>
+                </label>
+                
+                <label class="toggle-label">
+                    <input type="checkbox" id="streetLampsToggle" role="switch" aria-label="Toggle street lamps on or off"/>
+                    <span>Street Lamps</span>
+                </label>
+                
+                <hr id="layerHR" style="display: none;">
+                
+                <div id="layerHint" style="display: none; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem; line-height: 1.4;">
+                    Toggle layers on/off to show/hide them and control their stacking order. Please view the layer guide (linked in the navbar) to learn about each layer.
+                </div>
+                
+                <div id="dataLayerToggles" style="display: none;">
+                    <!-- Layer toggles will be dynamically populated here -->
+                </div>
+                
+                <button id="resetMapBtn" class="secondary" style="width:100%; margin-top:1rem;">Return to authority overview</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Map Container -->
+    <main>
+        <div id="map"></div>
+    </main>
+
+    <!-- Legend Sidebar (Right) -->
+    <aside aria-label="Map Legend" id="legendPanel" style="display: none;">
+        <div class="accordion">
+            <h2>
+                <button 
+                    type="button" 
+                    aria-expanded="true" 
+                    class="accordion-trigger" 
+                    aria-controls="legend-content"
+                    id="legend-heading">
+                    <span class="accordion-title">Legend</span>
+                    <span class="accordion-icon" aria-hidden="true"></span>
+                </button>
+            </h2>
+            <div id="legend-content" 
+                 role="region" 
+                 aria-labelledby="legend-heading" 
+                 class="accordion-panel">
+                <div id="legendItems">
+                    <!-- Legend items will be dynamically populated here -->
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Floating attribution -->
+    <div class="floating-attribution" aria-hidden="false">
+        © University of Leeds, 2025 | 
+        <a href="https://leafletjs.com/" target="_blank" rel="noopener">Leaflet</a> | 
+        © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+    
+    <!-- Proj4 for coordinate transformation -->
+    <script src="https://cdn.jsdelivr.net/npm/proj4@2.9.0/dist/proj4.js"></script>
+    
+    <!-- Chroma.js for color mapping -->
+    <script src="https://cdn.jsdelivr.net/npm/chroma-js@2.4.2/dist/chroma.min.js"></script>
+    
+    <!-- Main Application Script -->
+    <script>
+        // Initialize Proj4 for coordinate transformation
+        let toWGS84 = null;
+        
+        if (typeof proj4 !== 'undefined') {
+            proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894 +units=m +no_defs");
+            toWGS84 = proj4("EPSG:27700", "EPSG:4326");
+            console.log('Proj4 initialized for EPSG:27700 -> EPSG:4326 transformation');
+        } else {
+            console.warn('Proj4 not available');
+        }
+        
+        // Initialize map with zoom controls disabled (we'll add them to bottom-right)
+        const map = L.map('map', {
+            zoomControl: false
+        }).setView([54.0, -1.5], 7);
+        
+        // Add zoom controls to bottom-right
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        
+        // Add scale control
+        L.control.scale({
+            position: 'bottomleft',
+            metric: true,
+            imperial: false,
+            maxWidth: 150
+        }).addTo(map);
+        
+        // Define basemap layers
+        // Minimal: OSM with grayscale filter (clean, minimalist look)
+        // Detailed: Standard OSM (full color detail)
+        const minimalLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19,
+            className: 'minimal-basemap'
+        });
+        
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        });
+        
+        // Add minimal layer as default
+        minimalLayer.addTo(map);
+        
+        // Basemap toggle functionality
+        const detailedToggle = document.getElementById('detailedToggle');
+        let isDetailedMode = false;
+        
+        detailedToggle.addEventListener('change', function() {
+            isDetailedMode = this.checked;
+            
+            if (isDetailedMode) {
+                // Switch to OSM (detailed)
+                map.removeLayer(minimalLayer);
+                osmLayer.addTo(map);
+            } else {
+                // Switch to minimal
+                map.removeLayer(osmLayer);
+                minimalLayer.addTo(map);
+            }
+        });
+        
+        // Cycling network toggle functionality (regional level)
+        const cyclingNetworkToggle = document.getElementById('cyclingNetworkToggle');
+        let cyclingNetworkVisible = false;
+        
+        cyclingNetworkToggle.addEventListener('change', function() {
+            cyclingNetworkVisible = this.checked;
+            
+            if (cyclingNetworkVisible && mapState.cyclingNetworkLayer) {
+                mapState.cyclingNetworkLayer.visible = true;
+                mapState.cyclingNetworkLayer.layer.addTo(map);
+                updateLegend();
+            } else if (mapState.cyclingNetworkLayer && mapState.cyclingNetworkLayer.layer) {
+                mapState.cyclingNetworkLayer.visible = false;
+                map.removeLayer(mapState.cyclingNetworkLayer.layer);
+                updateLegend();
+            }
+        });
+        
+        // Street Lamps regional toggle
+        const streetLampsToggle = document.getElementById('streetLampsToggle');
+        let streetLampsVisible = false;
+        
+        streetLampsToggle.addEventListener('change', function() {
+            streetLampsVisible = this.checked;
+            
+            if (streetLampsVisible && mapState.streetLampsLayer) {
+                mapState.streetLampsLayer.visible = true;
+                mapState.streetLampsLayer.layer.addTo(map);
+                updateLegend();
+            } else if (mapState.streetLampsLayer && mapState.streetLampsLayer.layer) {
+                mapState.streetLampsLayer.visible = false;
+                map.removeLayer(mapState.streetLampsLayer.layer);
+                updateLegend();
+            }
+        });
+        
+        // State management
+        let mapState = {
+            authorities: [],
+            currentAuthority: null,
+            parksLayer: null,
+            allParksLayer: null,
+            authoritiesLayer: null,
+            allParksData: [],
+            sortedParks: [],
+            entrancesLayer: null,
+            visibilityLayer: null,
+            foliageLowLayer: null,
+            foliageMidLayer: null,
+            foliageTallLayer: null,
+            nachLayer: null,
+            cyclingNetworkLayer: null,
+            streetLampsLayer: null,
+            featuresInParksLayer: null,
+            featuresNearParksLayer: null
+        };
+        
+        // Utility function to get proper path for authority
+        function getAuthorityPath(authorityId) {
+            // Test-Region folder structure: Test-Region/{authorityId}/
+            return `${authorityId}/`;
+        }
+        
+        // Load authorities from LUT
+        // THIS IS WHERE I NEED TO UPDATE FOR EACH REGION!!!
+        async function loadAuthorities() {
+            try {
+                const response = await fetch('W10000009_lut.geojson');
+                const geojson = await response.json();
+                
+                mapState.authorities = geojson.features.map(feature => ({
+                    id: feature.properties.authority_id,
+                    name: feature.properties.auth_name_e,
+                    geometry: feature.geometry // Don't transform - just store as-is
+                }));
+                
+                // Sort by name
+                mapState.authorities.sort((a, b) => a.name.localeCompare(b.name));
+                
+                // Populate dropdown
+                const select = document.getElementById('localAuthority');
+                mapState.authorities.forEach(auth => {
+                    const option = document.createElement('option');
+                    option.value = auth.id;
+                    option.textContent = auth.name;
+                    select.appendChild(option);
+                });
+                
+                console.log(`Loaded ${mapState.authorities.length} authorities`);
+            } catch (error) {
+                console.error('Error loading authorities:', error);
+            }
+        }
+        
+        // Handle authority selection
+        document.getElementById('localAuthority').addEventListener('change', async (e) => {
+            const authorityId = e.target.value;
+            if (!authorityId) {
+                document.getElementById('parks').disabled = true;
+                document.getElementById('parks').innerHTML = '<option value="">-- Select an authority first --</option>';
+                return;
+            }
+            
+            const authority = mapState.authorities.find(a => a.id === authorityId);
+            mapState.currentAuthority = authority;
+            
+            // Load parks for this authority
+            await loadParksForAuthority(authority);
+        });
+        
+        // Transform coordinates from EPSG:27700 to EPSG:4326
+        function transformCoordinates(geometry) {
+            if (!geometry || !toWGS84) {
+                console.warn('Cannot transform: geometry=' + !!geometry + ', toWGS84=' + !!toWGS84);
+                return geometry;
+            }
+            
+            function transformPoint(coord) {
+                if (!coord || coord.length < 2) {
+                    console.error('Invalid coordinate:', coord);
+                    return coord;
+                }
+                try {
+                    // coord is [easting, northing] in EPSG:27700
+                    const transformed = toWGS84.forward([coord[0], coord[1]]);
+                    
+                    // proj4.forward() returns an array [lon, lat]
+                    if (Array.isArray(transformed) && transformed.length >= 2) {
+                        return [transformed[0], transformed[1]]; // [lon, lat] for GeoJSON
+                    } else if (typeof transformed === 'object' && transformed.x !== undefined && transformed.y !== undefined) {
+                        // Handle object format in case it changes
+                        return [transformed.x, transformed.y];
+                    } else {
+                        console.error('Invalid transformed format:', transformed, 'from', coord);
+                        return coord;
+                    }
+                } catch (err) {
+                    console.error('Error transforming point:', coord, err);
+                    return coord;
+                }
+            }
+            
+            function transformGeometry(geom) {
+                if (!geom) return null;
+                
+                try {
+                    if (geom.type === 'Polygon') {
+                        return {
+                            type: 'Polygon',
+                            coordinates: geom.coordinates.map(ring => ring.map(transformPoint))
+                        };
+                    } else if (geom.type === 'MultiPolygon') {
+                        return {
+                            type: 'MultiPolygon',
+                            coordinates: geom.coordinates.map(poly => 
+                                poly.map(ring => ring.map(transformPoint))
+                            )
+                        };
+                    } else if (geom.type === 'Point') {
+                        return {
+                            type: 'Point',
+                            coordinates: transformPoint(geom.coordinates)
+                        };
+                    }
+                    return geom;
+                } catch (err) {
+                    console.error('Error transforming geometry:', err);
+                    return geom;
+                }
+            }
+            
+            return transformGeometry(geometry);
+        }
+        
+        // Load parks GeoJSON for selected authority
+        async function loadParksForAuthority(authority) {
+            try {
+                const authPath = getAuthorityPath(authority.id);
+                const authName = authority.name;
+                
+                // Try different filenames in order of preference
+                const filenames = [
+                    `${authName}_parks.geojson`,
+                    `${authName}_pocket_parks.geojson`,
+                    `${authName}_pp_or_g_cmb.geojson`
+                ];
+                
+                let parksData = null;
+                let successFile = null;
+                
+                for (const filename of filenames) {
+                    try {
+                        const response = await fetch(`${authPath}${filename}`);
+                        if (response.ok) {
+                            parksData = await response.json();
+                            successFile = filename;
+                            console.log(`Loaded parks from ${successFile}`);
+                            break;
+                        }
+                    } catch (err) {
+                        console.log(`File not found: ${filename}`);
+                    }
+                }
+                
+                if (!parksData || !parksData.features || parksData.features.length === 0) {
+                    console.warn('No parks found for this authority');
+                    document.getElementById('parks').disabled = true;
+                    document.getElementById('parks').innerHTML = '<option value="">No parks data</option>';
+                    return;
+                }
+                
+                // Extract park names from features and transform coordinates
+                const parks = parksData.features.map(feature => ({
+                    name: feature.properties['Park Name'] || feature.properties.name || `Park ${feature.properties.park_offical_id || 'Unknown'}`,
+                    id: feature.properties.park_offical_id,
+                    newParkId: feature.properties.new_park_id, // New park ID for visibility file lookup
+                    geometry: transformCoordinates(feature.geometry),
+                    properties: feature.properties
+                }));
+                
+                // Sort by name
+                parks.sort((a, b) => a.name.localeCompare(b.name));
+                
+                // Store sorted parks for later use and dropdown index matching
+                mapState.sortedParks = parks;
+                mapState.allParksData = parks;
+                
+                // Check which parks have toilet data available
+                const parksWithToilets = new Set();
+                try {
+                    // Try to fetch the toilet dataset directory listing
+                    // We'll check each park's toilet file existence asynchronously
+                    const toiletChecks = parks.map(async (park) => {
+                        try {
+                            const toiletFilename = `toilet_dataset/${park.id}_toilets.geojson`;
+                            const response = await fetch(`${authPath}${toiletFilename}`, { method: 'HEAD' });
+                            if (response.ok || response.status === 200) {
+                                parksWithToilets.add(park.id);
+                            }
+                        } catch (error) {
+                            // File doesn't exist or can't be checked, skip
+                        }
+                    });
+                    
+                    // Wait for all toilet checks to complete
+                    await Promise.all(toiletChecks);
+                    console.log(`Parks with toilet data: ${parksWithToilets.size}`);
+                } catch (error) {
+                    console.log('Could not check for toilet datasets');
+                }
+                
+                // Store for use in tooltip generation
+                mapState.parksWithToilets = parksWithToilets;
+                
+                // Remove existing all parks layer
+                if (mapState.allParksLayer) {
+                    map.removeLayer(mapState.allParksLayer);
+                }
+                
+                // Create GeoJSON layer for all parks
+                const allParksGeoJSON = {
+                    type: 'FeatureCollection',
+                    features: mapState.allParksData.map(park => ({
+                        type: 'Feature',
+                        geometry: park.geometry,
+                        properties: { 
+                            name: park.name,
+                            area: park.properties['Total Area (m²)'] || park.properties.area_m2 || park.properties['Area (m2)'] || park.properties.total_area || null
+                        }
+                    }))
+                };
+                
+                mapState.allParksLayer = L.geoJSON(allParksGeoJSON, {
+                    style: {
+                        color: '#4F6C37',
+                        weight: 4,
+                        opacity: 1,
+                        fillOpacity: 0.5
+                    },
+                    onEachFeature: (feature, layer) => {
+                        layer.bindPopup(`<strong>${feature.properties.name}</strong>`);
+                        
+                        // Add hover tooltip with park name and area
+                        const parkName = feature.properties.name;
+                        let tooltipContent = parkName;
+                        
+                        if (feature.properties.area !== null && feature.properties.area !== undefined) {
+                            const areaM2 = parseFloat(feature.properties.area);
+                            tooltipContent = `<strong>${parkName}</strong><br/>Area: ${areaM2.toLocaleString('en-GB', { maximumFractionDigits: 0 })} m²`;
+                        }
+                        
+                        // Find the park ID for this feature
+                        const parkData = mapState.sortedParks.find(p => p.name === parkName);
+                        if (parkData && mapState.parksWithToilets && mapState.parksWithToilets.has(parkData.id)) {
+                            tooltipContent += '<br/>Nearby toilet';
+                        }
+                        
+                        layer.bindTooltip(tooltipContent, { 
+                            permanent: false, 
+                            direction: 'top',
+                            className: 'park-tooltip'
+                        });
+                        
+                        // Click to select park
+                        layer.on('click', () => {
+                            const parkIndex = mapState.sortedParks.findIndex(p => p.name === parkName);
+                            
+                            if (parkIndex !== -1) {
+                                document.getElementById('parks').value = parkIndex;
+                                document.getElementById('loadPark').click();
+                            }
+                        });
+                    }
+                }).addTo(map);
+                
+                console.log(`Rendered ${mapState.allParksData.length} parks on map`);
+                
+                // Populate parks dropdown
+                const parksSelect = document.getElementById('parks');
+                parksSelect.innerHTML = '<option value="">-- Select a park --</option>';
+                
+                parks.forEach((park, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = park.name;
+                    parksSelect.appendChild(option);
+                });
+                
+                parksSelect.disabled = false;
+                document.getElementById('loadPark').disabled = false;
+                
+                // Fit map to all parks
+                if (mapState.allParksLayer) {
+                    const bounds = mapState.allParksLayer.getBounds();
+                    if (bounds.isValid()) {
+                        map.fitBounds(bounds, { padding: [50, 50] });
+                    }
+                }
+                
+                console.log(`Loaded ${parks.length} parks from ${successFile}`);
+                
+                // Load features for this authority
+                await loadFeaturesInParks(authority);
+                await loadFeaturesNearParks(authority);
+            } catch (error) {
+                console.error('Error loading parks:', error);
+            }
+        }
+        
+        // Load selected park on map
+        document.getElementById('loadPark').addEventListener('click', async () => {
+            const parksSelect = document.getElementById('parks');
+            const selectedIndex = parksSelect.value;
+            
+            if (selectedIndex === '') {
+                alert('Please select a park first');
+                return;
+            }
+            
+            const selectedPark = mapState.sortedParks[selectedIndex];
+            
+            if (!selectedPark || !selectedPark.geometry) {
+                console.error('Park geometry not found at index', selectedIndex);
+            }
+            
+            // Remove existing park layer
+            if (mapState.parksLayer) {
+                map.removeLayer(mapState.parksLayer);
+            }
+            
+            // Create GeoJSON feature for selected park
+            const parkFeature = {
+                type: 'Feature',
+                geometry: selectedPark.geometry,
+                properties: {
+                    name: selectedPark.name
+                }
+            };
+            
+            // Create layer with prominent styling
+            mapState.parksLayer = L.geoJSON(parkFeature, {
+                style: {
+                    color: '#4F6C37',
+                    weight: 3,
+                    opacity: 0.9,
+                    fillOpacity: 0,
+                    fillColor: '#4F6C37'
+                },
+                onEachFeature: (feature, layer) => {
+                    layer.bindPopup(`<strong>${feature.properties.name}</strong>`, { closeButton: true });
+                    layer.openPopup();
+                }
+            }).addTo(map);
+            
+            // Store layer info for toggling
+            mapState.parkBoundaryLayer = {
+                id: 'park-boundary',
+                name: 'Park Boundary',
+                layer: mapState.parksLayer,
+                visible: true
+            };
+            
+            mapState.otherParksLayer = {
+                id: 'all-parks',
+                name: 'Nearby Parks',
+                layer: mapState.allParksLayer,
+                visible: false
+            };
+            
+            // Remove other parks layer from map by default
+            if (map.hasLayer(mapState.allParksLayer)) {
+                map.removeLayer(mapState.allParksLayer);
+            }
+            
+            // Fit map to park bounds with padding
+            const bounds = mapState.parksLayer.getBounds();
+            if (bounds.isValid()) {
+                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
+                console.log('Zoomed to park:', selectedPark.name, 'Bounds:', bounds);
+            } else {
+                console.warn('Invalid bounds for park:', selectedPark.name);
+            }
+            
+            // Display park name in nav
+            const navParkName = document.getElementById('navParkName');
+            navParkName.textContent = 'Park: ' + selectedPark.name;
+            navParkName.style.display = 'inline';
+            
+            // Load park entrances and wait for it to complete
+            await loadParkEntrances(selectedPark);
+            
+            // Load demographics for this park
+            await loadDemographicsData(selectedPark);
+            
+            // Load visibility hexagons and wait for it to complete
+            await loadVisibilityHexagons(selectedPark);
+            
+            // Load foliage hexagons and wait for it to complete
+            await loadFoliageHexagons(selectedPark);
+            
+            // Load NACH network and wait for it to complete
+            await loadNACHNetwork(selectedPark);
+            
+            // Load toilet dataset and wait for it to complete
+            await loadToiletDataset(selectedPark);
+            
+            // Load cycling dataset and wait for it to complete
+            await loadCyclingDataset(selectedPark);
+            
+            // Load walking dataset and wait for it to complete
+            await loadWalkingDataset(selectedPark);
+            
+            // Show and populate layer toggles for both layers
+            const layerToggles = [mapState.parkBoundaryLayer, mapState.otherParksLayer];
+            if (mapState.entrancesLayer) {
+                layerToggles.push(mapState.entrancesLayer);
+            }
+            if (mapState.visibilityLayer) {
+                layerToggles.push(mapState.visibilityLayer);
+            }
+            if (mapState.nachLayer) {
+                layerToggles.push(mapState.nachLayer);
+            }
+            if (mapState.toiletLayer) {
+                layerToggles.push(mapState.toiletLayer);
+            }
+            if (mapState.cyclingLayer) {
+                layerToggles.push(mapState.cyclingLayer);
+            }
+            if (mapState.walkingLayer) {
+                layerToggles.push(mapState.walkingLayer);
+            }
+            if (mapState.foliageLowLayer) {
+                layerToggles.push(mapState.foliageLowLayer);
+            }
+            if (mapState.foliageMidLayer) {
+                layerToggles.push(mapState.foliageMidLayer);
+            }
+            if (mapState.foliageTallLayer) {
+                layerToggles.push(mapState.foliageTallLayer);
+            }
+            if (mapState.featuresInParksLayer) {
+                layerToggles.push(mapState.featuresInParksLayer);
+            }
+            if (mapState.featuresNearParksLayer) {
+                layerToggles.push(mapState.featuresNearParksLayer);
+            }
+            if (mapState.demographicsLayer) {
+                layerToggles.push(mapState.demographicsLayer);
+            }
+            populateLayerToggles(layerToggles);
+            updateLegend();
+        });
+        
+        // Load park entrances for selected park
+        async function loadParkEntrances(park) {
+            try {
+                // Remove existing entrances layer
+                if (mapState.entrancesLayer && mapState.entrancesLayer.layer) {
+                    map.removeLayer(mapState.entrancesLayer.layer);
+                }
+                
+                const authPath = getAuthorityPath(mapState.currentAuthority.id);
+                const authName = mapState.currentAuthority.name;
+                
+                // Try to load entrances file
+                const entrancesFilename = `${authName}_park_entrances.geojson`;
+                
+                try {
+                    const response = await fetch(`${authPath}${entrancesFilename}`);
+                    if (!response.ok) {
+                        console.log(`Entrances file not found: ${entrancesFilename}`);
+                        return;
+                    }
+                    
+                    const entrancesData = await response.json();
+                    
+                    // Filter entrances for this park
+                    const parkEntrances = entrancesData.features.filter(feature => 
+                        feature.properties.park_offical_id === park.id
+                    );
+                    
+                    if (parkEntrances.length === 0) {
+                        console.log(`No entrances found for park: ${park.name}`);
+                        return;
+                    }
+                    
+                    // Transform coordinates and create markers
+                    const entranceMarkers = L.featureGroup();
+                    
+                    parkEntrances.forEach((entrance, index) => {
+                        const transformedGeometry = transformCoordinates(entrance.geometry);
+                        
+                        console.log(`Entrance ${index}:`, {
+                            original: entrance.geometry.coordinates,
+                            transformed: transformedGeometry.coordinates,
+                            latLng: [transformedGeometry.coordinates[1], transformedGeometry.coordinates[0]]
+                        });
+                        
+                        // Determine entrance type and style
+                        const source = entrance.properties.source;
+                        let entranceType, color, icon;
+                        
+                        if (source === 'os' || source === 'osm_tagged') {
+                            entranceType = 'Primary Entrance';
+                            color = '#EE655F'; // Orange-Red
+                        } else if (source === 'osm_intersection') {
+                            entranceType = 'Secondary Entrance';
+                            color = '#95a5a6'; // grey
+                        } else {
+                            entranceType = 'Unknown';
+                            color = '#95a5a6'; // Grey
+                        }
+                        
+                        // Create custom marker
+                        const marker = L.circleMarker(
+                            [transformedGeometry.coordinates[1], transformedGeometry.coordinates[0]],
+                            {
+                                radius: 6,
+                                fillColor: color,
+                                color: color,
+                                weight: 2,
+                                opacity: 1,
+                                fillOpacity: 0.8
+                            }
+                        );
+                        
+                        // Add popup
+                        marker.bindPopup(`<strong>${entranceType}</strong><br/>Source: ${source}`);
+                        
+                        entranceMarkers.addLayer(marker);
+                    });
+                    
+                    // Add layer to map
+                    entranceMarkers.addTo(map);
+                    
+                    // Store layer info for toggling
+                    mapState.entrancesLayer = {
+                        id: 'park-entrances',
+                        name: 'Park Entrances',
+                        layer: entranceMarkers,
+                        visible: true
+                    };
+                    
+                    console.log(`Loaded ${parkEntrances.length} entrances for ${park.name}`);
+                    console.log('Entrances layer stored in mapState:', mapState.entrancesLayer);
+                } catch (error) {
+                    console.error('Error loading entrances:', error);
+                }
+            } catch (error) {
+                console.error('Error in loadParkEntrances:', error);
+            }
+        }
+        
+        // Helper functions for hexagon calculation
+        function toRad(deg) {
+            return deg * Math.PI / 180;
+        }
+
+        function toDeg(rad) {
+            return rad * 180 / Math.PI;
+        }
+
+        // Calculate distance between two points in meters (haversine formula)
+        function haversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth radius in meters
+            const φ1 = toRad(lat1);
+            const φ2 = toRad(lat2);
+            const Δφ = toRad(lat2 - lat1);
+            const Δλ = toRad(lon2 - lon1);
+
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // Calculate destination point given distance and bearing
+        function destinationPoint(lat, lon, distanceM, bearingDeg) {
+            const R = 6371000; // Earth radius in meters
+            const φ1 = toRad(lat);
+            const λ1 = toRad(lon);
+            const θ = toRad(bearingDeg);
+            const δ = distanceM / R;
+
+            const φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) +
+                                Math.cos(φ1) * Math.sin(δ) * Math.cos(θ));
+            const λ2 = λ1 + Math.atan2(Math.sin(θ) * Math.sin(δ) * Math.cos(φ1),
+                                       Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2));
+
+            return [toDeg(φ2), toDeg(λ2)];
+        }
+
+        // Create hexagon from center point and radius in meters
+        function createHexFromCenter(lat, lon, radiusM) {
+            const hexPoints = [];
+            for (let i = 0; i < 6; i++) {
+                const bearing = i * 60; // 6 points, 60 degrees apart
+                const point = destinationPoint(lat, lon, radiusM, bearing);
+                hexPoints.push([point[0], point[1]]); // [lat, lon] for Leaflet
+            }
+            hexPoints.push(hexPoints[0]); // Close the polygon
+            return hexPoints;
+        }
+        
+        // Hexagon radius configuration
+        const HEX_RADIUS_M = 8; // Fixed radius in meters for all visibility hexagons
+        
+        // Load visibility hexagons for selected park
+        async function loadVisibilityHexagons(park) {
+            try {
+                // Remove existing visibility layer
+                if (mapState.visibilityLayer && mapState.visibilityLayer.layer) {
+                    map.removeLayer(mapState.visibilityLayer.layer);
+                }
+                
+                const authPath = getAuthorityPath(mapState.currentAuthority.id);
+                const authName = mapState.currentAuthority.name;
+                
+                // Get the new_park_id from the park object
+                if (!park.newParkId) {
+                    console.log(`No new_park_id found for park: ${park.name}`);
+                    return;
+                }
+                
+                // Try to load visibility file from combined parks directory
+                const visibilityFilename = `${authName}_pp_or_g_cmb/${park.newParkId}_visibility.geojson`;
+                
+                try {
+                    const response = await fetch(`${authPath}${visibilityFilename}`);
+                    if (!response.ok) {
+                        console.log(`Visibility file not found: ${visibilityFilename}`);
+                        return;
+                    }
+                    
+                    const visibilityData = await response.json();
+                    
+                    if (!visibilityData.features || visibilityData.features.length === 0) {
+                        console.log(`No visibility data found for park: ${park.name}`);
+                        return;
+                    }
+                    
+                    // Create hexagon layer
+                    const hexagonLayer = L.featureGroup();
+                    
+                    // Get visibility range for color scaling
+                    const visibilityValues = visibilityData.features.map(f => f.properties.visibility_pct || 0);
+                    const minVis = Math.min(...visibilityValues);
+                    const maxVis = Math.max(...visibilityValues);
+                    
+                    // Create color scale using a simple viridis-like interpolation
+                    // Define viridis color stops (since chroma may not be available)
+                    const viridisColors = ['#440154', '#482777', '#3b528b', '#2d708e', '#20908c', '#1fa78d', '#35b779', '#6ece58', '#b5de2b', '#fde724'];
+                    
+                    // Simple color interpolation function
+                    const getColorForValue = (value, minVal, maxVal) => {
+                        const normalized = (value - minVal) / (maxVal - minVal);
+                        const index = Math.floor(normalized * (viridisColors.length - 1));
+                        return viridisColors[Math.min(Math.max(index, 0), viridisColors.length - 1)];
+                    };
+                    
+                    const colorScale = getColorForValue;
+                    
+                    visibilityData.features.forEach((feature, index) => {
+                        const coords = feature.geometry.coordinates;
+                        const lon = coords[0];
+                        const lat = coords[1];
+                        const visibility = feature.properties.visibility_pct || 0;
+                        
+                        // Create hexagon using fixed radius
+                        const hexCorners = createHexFromCenter(lat, lon, HEX_RADIUS_M);
+                        
+                        // Create polygon for hexagon
+                        const hexagon = L.polygon(hexCorners, {
+                            color: colorScale(visibility, minVis, maxVis),
+                            weight: 1,
+                            opacity: 0.7,
+                            fillOpacity: 0.6,
+                            fillColor: colorScale(visibility, minVis, maxVis)
+                        });
+                        
+                        // Add popup with visibility percentage
+                        hexagon.bindPopup(`<strong>Visibility</strong><br/>${visibility.toFixed(1)}%`);
+                        
+                        hexagonLayer.addLayer(hexagon);
+                    });
+                    
+                    // Store layer info for toggling (but don't add to map yet - user must enable via toggle)
+                    mapState.visibilityLayer = {
+                        id: 'visibility-hexagons',
+                        name: 'Visibility Analysis',
+                        layer: hexagonLayer,
+                        visible: false
+                    };
+                    
+                    console.log(`Loaded ${visibilityData.features.length} visibility hexagons for ${park.name}`);
+                } catch (error) {
+                    console.error('Error loading visibility:', error);
+                }
+            } catch (error) {
+                console.error('Error in loadVisibilityHexagons:', error);
+            }
+        }
+        
+        // Load foliage hexagons for selected park
+        async function loadFoliageHexagons(park) {
+            try {
+                // Remove existing foliage layers
+                if (mapState.foliageLowLayer && mapState.foliageLowLayer.layer) {
+                    map.removeLayer(mapState.foliageLowLayer.layer);
+                }
+                if (mapState.foliageMidLayer && mapState.foliageMidLayer.layer) {
+                    map.removeLayer(mapState.foliageMidLayer.layer);
+                }
+                if (mapState.foliageTallLayer && mapState.foliageTallLayer.layer) {
+                    map.removeLayer(mapState.foliageTallLayer.layer);
+                }
+                
+                const authPath = getAuthorityPath(mapState.currentAuthority.id);
+                const authName = mapState.currentAuthority.name;
+                
+                // Get the new_park_id from the park object
+                if (!park.newParkId) {
+                    console.log(`No new_park_id found for park: ${park.name}`);
+                    return;
+                }
+                
+                // Try to load foliage file from combined parks directory
+                const foliageFilename = `${authName}_pp_or_g_cmb/${park.newParkId}_foliage.geojson`;
+                
+                try {
+                    const response = await fetch(`${authPath}${foliageFilename}`);
+                    if (!response.ok) {
+                        console.log(`Foliage file not found: ${foliageFilename}`);
+                        return;
+                    }
+                    
+                    const foliageData = await response.json();
+                    
+                    if (!foliageData.features || foliageData.features.length === 0) {
+                        console.log(`No foliage data found for park: ${park.name}`);
+                        return;
+                    }
+                    
+                    // Create three feature groups for each foliage height category
+                    const lowLayer = L.featureGroup();
+                    const midLayer = L.featureGroup();
+                    const tallLayer = L.featureGroup();
+                    
+                    // White to green color scale for all foliage layers
+                    const whiteToGreenColors = ['#ffffff', '#e8f5e9', '#c8e6c9', '#a5d6a7', '#81c784', '#66bb6a', '#4caf50', '#388e3c', '#2e7d32', '#1b5e20'];
+                    
+                    const getColorForValue = (value, minVal, maxVal) => {
+                        if (maxVal === minVal) return whiteToGreenColors[0];
+                        const normalized = (value - minVal) / (maxVal - minVal);
+                        const index = Math.floor(normalized * (whiteToGreenColors.length - 1));
+                        return whiteToGreenColors[Math.min(Math.max(index, 0), whiteToGreenColors.length - 1)];
+                    };
+                    
+                    // Get ranges for each category - use correct property names with special characters
+                    // Filter to only include values >= 10%
+                    const lowValues = foliageData.features
+                        .map(f => f.properties['low_level_<0.5'] || 0)
+                        .filter(v => v >= 10);
+                    const midValues = foliageData.features
+                        .map(f => f.properties['mid_level_0.5-2'] || 0)
+                        .filter(v => v >= 10);
+                    const tallValues = foliageData.features
+                        .map(f => f.properties['tall_2+'] || 0)
+                        .filter(v => v >= 10);
+                    
+                    const lowMin = lowValues.length > 0 ? Math.min(...lowValues) : 10;
+                    const lowMax = lowValues.length > 0 ? Math.max(...lowValues) : 100;
+                    const midMin = midValues.length > 0 ? Math.min(...midValues) : 10;
+                    const midMax = midValues.length > 0 ? Math.max(...midValues) : 100;
+                    const tallMin = tallValues.length > 0 ? Math.min(...tallValues) : 10;
+                    const tallMax = tallValues.length > 0 ? Math.max(...tallValues) : 100;
+                    
+                    // Process each feature for all three categories
+                    foliageData.features.forEach((feature, index) => {
+                        const coords = feature.geometry.coordinates;
+                        const lon = coords[0];
+                        const lat = coords[1];
+                        
+                        // Extract property values - handle both underscores and angle brackets
+                        const lowVal = feature.properties['low_level_<0.5'] !== undefined ? 
+                                      feature.properties['low_level_<0.5'] : 
+                                      (feature.properties.low_level_lt_0_5 || 0);
+                        const midVal = feature.properties['mid_level_0.5-2'] !== undefined ? 
+                                      feature.properties['mid_level_0.5-2'] : 
+                                      (feature.properties.mid_level_0_5_2 || 0);
+                        const tallVal = feature.properties['tall_2+'] !== undefined ? 
+                                       feature.properties['tall_2+'] : 
+                                       (feature.properties.tall_2_plus || 0);
+                        
+                        // Skip hexagons with values < 10%
+                        if (lowVal < 10 && midVal < 10 && tallVal < 10) {
+                            return;
+                        }
+                        
+                        // Create hexagon using fixed radius
+                        const hexCorners = createHexFromCenter(lat, lon, HEX_RADIUS_M);
+                        
+                        // Low foliage hexagon - only if value >= 10%
+                        if (lowVal >= 10) {
+                            const lowColor = getColorForValue(lowVal, lowMin, lowMax);
+                            const lowHexagon = L.polygon(hexCorners, {
+                                color: lowColor,
+                                weight: 1,
+                                opacity: 0.7,
+                                fillOpacity: 0.6,
+                                fillColor: lowColor
+                            });
+                            lowHexagon.bindPopup(`<strong>Low Foliage (&lt;0.5m)</strong><br/>${lowVal.toFixed(1)}%`);
+                            lowLayer.addLayer(lowHexagon);
+                        }
+                        
+                        // Mid foliage hexagon - only if value >= 10%
+                        if (midVal >= 10) {
+                            const midColor = getColorForValue(midVal, midMin, midMax);
+                            const midHexagon = L.polygon(hexCorners, {
+                                color: midColor,
+                                weight: 1,
+                                opacity: 0.7,
+                                fillOpacity: 0.6,
+                                fillColor: midColor
+                            });
+                            midHexagon.bindPopup(`<strong>Mid Foliage (0.5-2m)</strong><br/>${midVal.toFixed(1)}%`);
+                            midLayer.addLayer(midHexagon);
+                        }
+                        
+                        // Tall foliage hexagon - only if value >= 10%
+                        if (tallVal >= 10) {
+                            const tallColor = getColorForValue(tallVal, tallMin, tallMax);
+                            const tallHexagon = L.polygon(hexCorners, {
+                                color: tallColor,
+                                weight: 1,
+                                opacity: 0.7,
+                                fillOpacity: 0.6,
+                                fillColor: tallColor
+                            });
+                            
+                            // Extract height properties
+                            const maxHeight = feature.properties.max_height || 0;
+                            const meanHeight = feature.properties.mean_height || 0;
+                            
+                            // Bind popup with foliage percentage
+                            tallHexagon.bindPopup(`<strong>Tall Foliage (2m+)</strong><br/>${tallVal.toFixed(1)}%`);
+                            
+                            // Bind tooltip with height information (shown on hover)
+                            tallHexagon.bindTooltip(`<strong>Heights:</strong><br/>Max: ${maxHeight.toFixed(2)}m<br/>Mean: ${meanHeight.toFixed(2)}m`, {
+                                permanent: false,
+                                direction: 'top',
+                                className: 'foliage-tooltip'
+                            });
+                            
+                            tallLayer.addLayer(tallHexagon);
+                        }
+                    });
+                    
+                    // Store layer info for toggling
+                    mapState.foliageLowLayer = {
+                        id: 'foliage-low-hexagons',
+                        name: 'Low Foliage (<0.5m)',
+                        layer: lowLayer,
+                        visible: false
+                    };
+                    
+                    mapState.foliageMidLayer = {
+                        id: 'foliage-mid-hexagons',
+                        name: 'Mid Foliage (0.5-2m)',
+                        layer: midLayer,
+                        visible: false
+                    };
+                    
+                    mapState.foliageTallLayer = {
+                        id: 'foliage-tall-hexagons',
+                        name: 'Tall Foliage (2m+)',
+                        layer: tallLayer,
+                        visible: false
+                    };
+                    
+                    console.log(`Loaded ${foliageData.features.length} foliage hexagons for ${park.name}`);
+                } catch (error) {
+                    console.error('Error loading foliage:', error);
+                }
+            } catch (error) {
+                console.error('Error in loadFoliageHexagons:', error);
+            }
+        }
+        
+        // Load NACH (Predicted Route Popularity) network
+        async function loadNACHNetwork(park) {
+            try {
+                // Remove existing NACH layer
+                if (mapState.nachLayer && mapState.nachLayer.layer) {
+                    map.removeLayer(mapState.nachLayer.layer);
+                }
+                
+                const authPath = getAuthorityPath(mapState.currentAuthority.id);
+                
+                // Get the official park ID from the park object
+                if (!park.id) {
+                    console.log(`No official park id found for park: ${park.name}`);
+                    return;
+                }
+                
+                // Load NACH file from NACH_dataset directory
+                // Path format: {authorityId}/NACH_dataset/{parkId}_NACH.geojson
+                const nachFilename = `NACH_dataset/${park.id}_NACH.geojson`;
+                
+                try {
+                    const response = await fetch(`${authPath}${nachFilename}`);
+                    if (!response.ok) {
+                        console.log(`NACH file not found: ${nachFilename} (this is OK - not all areas have NACH data)`);
+                        return;
+                    }
+                    
+                    const nachData = await response.json();
+                    
+                    if (!nachData.features || nachData.features.length === 0) {
+                        console.log(`No NACH data found for park: ${park.name}`);
+                        return;
+                    }
+                    
+                    // Create feature group for NACH network
+                    const nachGroup = L.featureGroup();
+                    
+                    // Get NACH value range for color scaling
+                    const nachValues = nachData.features.map(f => f.properties.nach || 0);
+                    const minNACH = Math.min(...nachValues);
+                    const maxNACH = Math.max(...nachValues);
+                    
+                    // Create greyscale color palette (white for low, black for high)
+                    const greyscaleColors = ['#ffffff', '#e6e6e6', '#cccccc', '#999999', '#666666', '#333333', '#000000'];
+                    
+                    // Simple color interpolation function for greyscale
+                    const getGreyscaleColor = (value, minVal, maxVal) => {
+                        const normalized = (value - minVal) / (maxVal - minVal);
+                        const index = Math.floor(normalized * (greyscaleColors.length - 1));
+                        return greyscaleColors[Math.min(Math.max(index, 0), greyscaleColors.length - 1)];
+                    };
+                    
+                    nachData.features.forEach(feature => {
+                        const geoJsonCoords = feature.geometry.coordinates; // GeoJSON: [lng, lat]
+                        // Convert to Leaflet format: [lat, lng]
+                        const leafletCoords = geoJsonCoords.map(coord => [coord[1], coord[0]]);
+                        const nachValue = feature.properties.nach || 0;
+                        const color = getGreyscaleColor(nachValue, minNACH, maxNACH);
+                        
+                        // Calculate line weight based on NACH value (1 to 5 for noticeable variation)
+                        const normalizedValue = (nachValue - minNACH) / (maxNACH - minNACH);
+                        const weight = 1 + (normalizedValue * 4); // Range from 1 to 5
+                        
+                        // Create line for each network segment
+                        const line = L.polyline(leafletCoords, {
+                            color: color,
+                            weight: weight,
+                            opacity: 1.0,
+                            fillOpacity: 1.0,
+                            lineCap: 'round',
+                            lineJoin: 'round'
+                        });
+                        
+                        // Add popup with NACH value
+                        line.bindPopup(`<strong>Predicted Route Popularity</strong><br/>Choice: ${nachValue.toFixed(3)}`);
+                        
+                        // Add tooltip showing value on hover
+                        line.bindTooltip(`Choice: ${nachValue.toFixed(3)}`, { 
+                            permanent: false, 
+                            direction: 'top',
+                            className: 'nach-tooltip'
+                        });
+                        
+                        nachGroup.addLayer(line);
+                    });
+                    
+                    // Store layer info for toggling (but don't add to map yet - user must enable via toggle)
+                    mapState.nachLayer = {
+                        id: 'nach-network',
+                        name: 'Predicted Route Popularity (NACH)',
+                        layer: nachGroup,
+                        visible: false,
+                        minValue: minNACH,
+                        maxValue: maxNACH
+                    };
+                    
+                    console.log(`Loaded ${nachData.features.length} NACH segments for ${park.name}`);
+                } catch (error) {
+                    console.error('Error loading NACH:', error);
+                }
+            } catch (error) {
+                console.error('Error in loadNACHNetwork:', error);
+            }
+        }
+        
+        // Load Street Lamps dataset
+        // Load Regional Street Lamps for all authorities
+        async function loadRegionalStreetLamps() {
+            try {
+                // Remove existing street lamps layer if present
+                if (mapState.streetLampsLayer && mapState.streetLampsLayer.layer) {
+                    map.removeLayer(mapState.streetLampsLayer.layer);
+                }
+                
+                // Create feature group for all street lamps
+                const lampsGroup = L.featureGroup();
+                let totalLamps = 0;
+                
+                // Load street lamps for each authority
+                for (const authority of mapState.authorities) {
+                    try {
+                        const authPath = getAuthorityPath(authority.id);
+                        const authName = authority.name;
+                        const streetLampsFilename = `${authName}_street_lamps.geojson`;
+                        
+                        const response = await fetch(`${authPath}${streetLampsFilename}`);
+                        if (!response.ok) {
+                            console.log(`Street lamps file not found for ${authName}`);
+                            continue;
+                        }
+                        
+                        const lampsData = await response.json();
+                        
+                        if (!lampsData.features || lampsData.features.length === 0) {
+                            console.log(`No street lamps data for ${authName}`);
+                            continue;
+                        }
+                        
+                        lampsData.features.forEach(feature => {
+                            if (feature.geometry.type === 'Point') {
+                                const [lng, lat] = feature.geometry.coordinates;
+                                
+                                // Create CircleMarker for efficient rendering
+                                const marker = L.circleMarker([lat, lng], {
+                                    radius: 6,
+                                    color: '#FFD700',
+                                    weight: 2,
+                                    opacity: 0.9,
+                                    fill: true,
+                                    fillColor: '#FFD700',
+                                    fillOpacity: 0.8,
+                                    className: 'street-lamp-marker'
+                                });
+                                
+                                // Add popup with lamp info
+                                const popupContent = `<strong>Street Lamp</strong><br/>` +
+                                    `ID: ${feature.properties.osmid || 'N/A'}<br/>` +
+                                    `Source: ${feature.properties.source || 'OSM'}`;
+                                marker.bindPopup(popupContent);
+                                
+                                // Add tooltip
+                                marker.bindTooltip('Street Lamp', { 
+                                    permanent: false, 
+                                    direction: 'top',
+                                    className: 'street-lamp-tooltip'
+                                });
+                                
+                                lampsGroup.addLayer(marker);
+                                totalLamps++;
+                            }
+                        });
+                    } catch (error) {
+                        console.error(`Error loading street lamps for ${authority.name}:`, error);
+                    }
+                }
+                
+                // Store layer info for toggling
+                mapState.streetLampsLayer = {
+                    id: 'street-lamps',
+                    name: 'Street Lamps',
+                    layer: lampsGroup,
+                    visible: false
+                };
+                
+                console.log(`Loaded regional street lamps: ${totalLamps} lamps across all authorities`);
+            } catch (error) {
+                console.error('Error in loadRegionalStreetLamps:', error);
+            }
+        }
+        
+        // Load Toilet dataset
+        async function loadToiletDataset(park) {
+            try {
+                // Remove existing toilet layer
+                if (mapState.toiletLayer && mapState.toiletLayer.layer) {
+                    map.removeLayer(mapState.toiletLayer.layer);
+                }
+                
+                const authPath = getAuthorityPath(mapState.currentAuthority.id);
+                
+                // Get the official park ID from the park object
+                if (!park.id) {
+                    console.log(`No official park id found for park: ${park.name}`);
+                    return;
+                }
+                
+                // Load toilet file from toilet_dataset directory
+                // Path format: {authorityId}/toilet_dataset/{parkId}_toilets.geojson
+                const toiletFilename = `toilet_dataset/${park.id}_toilets.geojson`;
+                
+                try {
+                    const response = await fetch(`${authPath}${toiletFilename}`);
+                    if (!response.ok) {
+                        console.log(`Toilet file not found: ${toiletFilename} (this is OK - not all parks have toilet data)`);
+                        return;
+                    }
+                    
+                    const toiletData = await response.json();
+                    
+                    if (!toiletData.features || toiletData.features.length === 0) {
+                        console.log(`No toilet data found for park: ${park.name}`);
+                        return;
+                    }
+                    
+                    // Create feature group for toilet markers
+                    const toiletGroup = L.featureGroup();
+                    
+                    // Create blue square icon
+                    const blueSquareIcon = L.icon({
+                        iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHJ4PSIyIiBmaWxsPSIjMDA3QkZGIi8+PC9zdmc+',
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12],
+                        popupAnchor: [0, -12]
+                    });
+                    
+                    toiletData.features.forEach(feature => {
+                        const coords = feature.geometry.coordinates; // GeoJSON: [lng, lat]
+                        const toiletCoords = [coords[1], coords[0]]; // Convert to [lat, lng]
+                        const props = feature.properties;
+                        
+                        // Build popup content
+                        let popupContent = `<strong>${props.name || 'Toilet Facility'}</strong><br/>`;
+                        popupContent += `<strong>Access:</strong> ${props.accessible === 'True' ? 'Accessible' : 'Not accessible'}<br/>`;
+                        popupContent += `<strong>Payment:</strong> ${props.payment_info || 'Unknown'}<br/>`;
+                        
+                        // Add facility info
+                        const facilities = [];
+                        if (props.women === 'True') facilities.push('Women');
+                        if (props.men === 'True') facilities.push('Men');
+                        if (props.baby_change === 'True') facilities.push('Baby Change');
+                        if (facilities.length > 0) {
+                            popupContent += `<strong>Facilities:</strong> ${facilities.join(', ')}<br/>`;
+                        }
+                        
+                        // Create marker
+                        const marker = L.marker(toiletCoords, { icon: blueSquareIcon });
+                        marker.bindPopup(popupContent);
+                        marker.bindTooltip(props.name || 'Toilet', { 
+                            permanent: false, 
+                            direction: 'top',
+                            className: 'toilet-tooltip'
+                        });
+                        
+                        toiletGroup.addLayer(marker);
+                    });
+                    
+                    // Store layer info for toggling
+                    mapState.toiletLayer = {
+                        id: 'toilet-facilities',
+                        name: 'Toilet Facilities',
+                        layer: toiletGroup,
+                        visible: false
+                    };
+                    
+                    console.log(`Loaded ${toiletData.features.length} toilet facilities for ${park.name}`);
+                } catch (error) {
+                    console.error('Error loading toilet data:', error);
+                }
+            } catch (error) {
+                console.error('Error in loadToiletDataset:', error);
+            }
+        }
+        
+        // Load Cycling dataset for selected park
+        async function loadCyclingDataset(park) {
+            try {
+                console.log(`loadCyclingDataset called for park: ${park.name} (ID: ${park.id})`);
+                
+                // Remove existing cycling layer
+                if (mapState.cyclingLayer && mapState.cyclingLayer.layer) {
+                    map.removeLayer(mapState.cyclingLayer.layer);
+                }
+                
+                const authPath = getAuthorityPath(mapState.currentAuthority.id);
+                
+                // Get the official park ID from the park object
+                if (!park.id) {
+                    console.log(`No official park id found for park: ${park.name}`);
+                    return;
+                }
+                
+                // Load cycling file from cycling_dataset directory
+                const cyclingFilename = `cycling_dataset/${park.id}_cycling.geojson`;
+                console.log(`Attempting to load: ${authPath}${cyclingFilename}`);
+                
+                try {
+                    const response = await fetch(`${authPath}${cyclingFilename}`);
+                    if (!response.ok) {
+                        console.log(`Cycling file not found: ${cyclingFilename} (this is OK - not all parks have cycling data)`);
+                        return;
+                    }
+                    
+                    const cyclingData = await response.json();
+                    
+                    if (!cyclingData.features || cyclingData.features.length === 0) {
+                        console.log(`No cycling data found for park: ${park.name}`);
+                        return;
+                    }
+                    
+                    // Create feature group for cycling routes
+                    const cyclingGroup = L.featureGroup();
+                    
+                    cyclingData.features.forEach(feature => {
+                        if (feature.geometry.type === 'LineString') {
+                            const coords = feature.geometry.coordinates.map(c => [c[1], c[0]]);
+                            
+                            const line = L.polyline(coords, {
+                                color: '#2196F3',
+                                weight: 3,
+                                opacity: 0.7,
+                                lineCap: 'round',
+                                lineJoin: 'round',
+                                dashArray: '5, 5'
+                            });
+                            
+                            // Add popup with cycling route info if available
+                            const popupContent = feature.properties.name ? 
+                                `<strong>${feature.properties.name}</strong>` : 
+                                '<strong>Cycling Route</strong>';
+                            line.bindPopup(popupContent);
+                            
+                            cyclingGroup.addLayer(line);
+                        } else if (feature.geometry.type === 'MultiLineString') {
+                            // Handle MultiLineString: each coordinate array is a separate line
+                            feature.geometry.coordinates.forEach(lineCoords => {
+                                const coords = lineCoords.map(c => [c[1], c[0]]);
+                                
+                                const line = L.polyline(coords, {
+                                    color: '#2196F3',
+                                    weight: 3,
+                                    opacity: 0.7,
+                                    lineCap: 'round',
+                                    lineJoin: 'round',
+                                    dashArray: '5, 5'
+                                });
+                                
+                                // Add popup with cycling route info if available
+                                const popupContent = feature.properties.name ? 
+                                    `<strong>${feature.properties.name}</strong>` : 
+                                    '<strong>Cycling Route</strong>';
+                                line.bindPopup(popupContent);
+                                
+                                cyclingGroup.addLayer(line);
+                            });
+                        }
+                    });
+                    
+                    // Store layer info for toggling
+                    mapState.cyclingLayer = {
+                        id: 'park-cycling',
+                        name: 'Cycling Routes',
+                        layer: cyclingGroup,
+                        visible: false
+                    };
+                    
+                    console.log(`Loaded ${cyclingData.features.length} cycling routes for ${park.name}`);
+                } catch (error) {
+                    console.error('Error loading cycling data:', error);
+                }
+            } catch (error) {
+                console.error('Error in loadCyclingDataset:', error);
+            }
+        }
+        
+        // Load Walking dataset for selected park
+        async function loadWalkingDataset(park) {
+            try {
+                // Remove existing walking layer
+                if (mapState.walkingLayer && mapState.walkingLayer.layer) {
+                    map.removeLayer(mapState.walkingLayer.layer);
+                }
+                
+                const authPath = getAuthorityPath(mapState.currentAuthority.id);
+                
+                // Get the official park ID from the park object
+                if (!park.id) {
+                    console.log(`No official park id found for park: ${park.name}`);
+                    return;
+                }
+                
+                // Load walking file from walking_dataset directory
+                const walkingFilename = `walking_dataset/${park.id}_walking.geojson`;
+                
+                try {
+                    const response = await fetch(`${authPath}${walkingFilename}`);
+                    if (!response.ok) {
+                        console.log(`Walking file not found: ${walkingFilename} (this is OK - not all parks have walking data)`);
+                        return;
+                    }
+                    
+                    const walkingData = await response.json();
+                    
+                    if (!walkingData.features || walkingData.features.length === 0) {
+                        console.log(`No walking data found for park: ${park.name}`);
+                        return;
+                    }
+                    
+                    // Create feature group for walking routes
+                    const walkingGroup = L.featureGroup();
+                    
+                    walkingData.features.forEach(feature => {
+                        if (feature.geometry.type === 'LineString') {
+                            const coords = feature.geometry.coordinates.map(c => [c[1], c[0]]);
+                            
+                            const line = L.polyline(coords, {
+                                color: '#FF6F00',
+                                weight: 3,
+                                opacity: 0.7,
+                                lineCap: 'round',
+                                lineJoin: 'round'
+                            });
+                            
+                            // Add popup with walking route info if available
+                            const popupContent = feature.properties.name ? 
+                                `<strong>${feature.properties.name}</strong>` : 
+                                '<strong>Walking Route</strong>';
+                            line.bindPopup(popupContent);
+                            
+                            walkingGroup.addLayer(line);
+                        } else if (feature.geometry.type === 'MultiLineString') {
+                            // Handle MultiLineString: each coordinate array is a separate line
+                            feature.geometry.coordinates.forEach(lineCoords => {
+                                const coords = lineCoords.map(c => [c[1], c[0]]);
+                                
+                                const line = L.polyline(coords, {
+                                    color: '#FF6F00',
+                                    weight: 3,
+                                    opacity: 0.7,
+                                    lineCap: 'round',
+                                    lineJoin: 'round'
+                                });
+                                
+                                // Add popup with walking route info if available
+                                const popupContent = feature.properties.name ? 
+                                    `<strong>${feature.properties.name}</strong>` : 
+                                    '<strong>Walking Route</strong>';
+                                line.bindPopup(popupContent);
+                                
+                                walkingGroup.addLayer(line);
+                            });
+                        }
+                    });
+                    
+                    // Store layer info for toggling
+                    mapState.walkingLayer = {
+                        id: 'park-walking',
+                        name: 'Walking Routes',
+                        layer: walkingGroup,
+                        visible: false
+                    };
+                    
+                    console.log(`Loaded ${walkingData.features.length} walking routes for ${park.name}`);
+                } catch (error) {
+                    console.error('Error loading walking data:', error);
+                }
+            } catch (error) {
+                console.error('Error in loadWalkingDataset:', error);
+            }
+        }
+        
+        // Helper function to generate feature label with intelligent filtering and sentence case
+        function toSentenceCase(str) {
+            if (!str) return '';
+            return str.replace(/_/g, ' ').charAt(0).toUpperCase() + str.replace(/_/g, ' ').slice(1).toLowerCase();
+        }
+        
+        function getFeatureLabelIn(props) {
+            const primaryName = props['Primary Name_feature'];
+            const typeOS = props['Type (OS)_feature'];
+            const typeOSM = props['Type (OSM)_feature'];
+            
+            let label = '';
+            
+            // Prioritize Type (OS) first
+            if (typeOS) {
+                label = toSentenceCase(typeOS);
+            }
+            // Then try Type (OSM)
+            else if (typeOSM) {
+                label = toSentenceCase(typeOSM);
+            }
+            // Finally try Primary Name
+            else if (primaryName) {
+                label = toSentenceCase(primaryName);
+            }
+            
+            // Default to 'Feature'
+            return label || 'Feature';
+        }
+        
+        // Load Features In Parks dataset
+        async function loadFeaturesInParks(authority) {
+            try {
+                // Remove existing layer
+                if (mapState.featuresInParksLayer && mapState.featuresInParksLayer.layer) {
+                    map.removeLayer(mapState.featuresInParksLayer.layer);
+                }
+                
+                const authPath = getAuthorityPath(authority.id);
+                const authName = authority.name;
+                const featuresFilename = `${authName}_features_within_pp_or_g.geojson`;
+                
+                try {
+                    const response = await fetch(`${authPath}${featuresFilename}`);
+                    if (!response.ok) {
+                        console.log(`Features in parks file not found: ${featuresFilename}`);
+                        return;
+                    }
+                    
+                    const featuresData = await response.json();
+                    if (!featuresData.features || featuresData.features.length === 0) {
+                        console.log(`No features data found for authority: ${authority.name}`);
+                        return;
+                    }
+                    
+                    // Create feature group for features in parks
+                    const featuresGroup = L.featureGroup();
+                    
+                    // Use proj4.js for coordinate transformation (already loaded in HTML)
+                    featuresData.features.forEach(feature => {
+                        try {
+                            // Transform geometry from EPSG:27700 to EPSG:4326
+                            const transformedGeometry = transformCoordinates(feature.geometry);
+                            
+                            if (!transformedGeometry) {
+                                return;
+                            }
+                            
+                            if (feature.geometry.type === 'Point') {
+                                const coords = transformedGeometry.coordinates;
+                                const marker = L.circleMarker([coords[1], coords[0]], {
+                                    radius: 5,
+                                    color: '#4CAF50',
+                                    weight: 2,
+                                    opacity: 0.8,
+                                    fill: true,
+                                    fillColor: '#4CAF50',
+                                    fillOpacity: 0.3
+                                });
+                                
+                                const featureName = getFeatureLabelIn(feature.properties);
+                                marker.bindTooltip(featureName, {
+                                    permanent: false,
+                                    direction: 'top',
+                                    className: 'features-in-parks-tooltip'
+                                });
+                                
+                                featuresGroup.addLayer(marker);
+                            } else if (feature.geometry.type === 'Polygon') {
+                                const coords = transformedGeometry.coordinates[0].map(c => [c[1], c[0]]);
+                                const polygon = L.polygon(coords, {
+                                    color: '#4CAF50',
+                                    weight: 2,
+                                    opacity: 0.8,
+                                    dashArray: '5, 5',
+                                    fill: true,
+                                    fillColor: '#4CAF50',
+                                    fillOpacity: 0.05,
+                                    lineCap: 'butt'
+                                });
+                                
+                                const featureName = getFeatureLabelIn(feature.properties);
+                                polygon.bindTooltip(featureName, {
+                                    permanent: false,
+                                    direction: 'top',
+                                    className: 'features-in-parks-tooltip'
+                                });
+                                
+                                featuresGroup.addLayer(polygon);
+                            } else if (feature.geometry.type === 'LineString') {
+                                const coords = transformedGeometry.coordinates.map(c => [c[1], c[0]]);
+                                const line = L.polyline(coords, {
+                                    color: '#4CAF50',
+                                    weight: 2,
+                                    opacity: 0.8,
+                                    dashArray: '5, 5',
+                                    lineCap: 'butt'
+                                });
+                                
+                                const featureName = getFeatureLabelIn(feature.properties);
+                                line.bindTooltip(featureName, {
+                                    permanent: false,
+                                    direction: 'top',
+                                    className: 'features-in-parks-tooltip'
+                                });
+                                
+                                featuresGroup.addLayer(line);
+                            }
+                        } catch (e) {
+                            console.warn('Error processing feature:', e);
+                        }
+                    });
+                    
+                    // Store layer info for toggling
+                    mapState.featuresInParksLayer = {
+                        id: 'features-in-parks',
+                        name: 'Features In Parks',
+                        layer: featuresGroup,
+                        visible: false
+                    };
+                    
+                    console.log(`Loaded ${featuresData.features.length} features in parks for ${authority.name}`);
+                } catch (error) {
+                    console.error('Error loading features in parks:', error);
+                }
+            } catch (error) {
+                console.error('Error in loadFeaturesInParks:', error);
+            }
+        }
+        
+        // Helper function to generate feature label with intelligent filtering and sentence case
+        function getFeatureLabelNear(props) {
+            const primaryName = props['Primary Name'];
+            const typeOS = props['Type (OS)'];
+            const typeOSM = props['Type (OSM)'];
+            
+            let label = '';
+            
+            // Use Primary Name if available
+            if (primaryName) {
+                label = toSentenceCase(primaryName);
+            }
+            
+            // Add Type (OS) if available
+            if (typeOS) {
+                const typeOSFormatted = toSentenceCase(typeOS);
+                if (label) {
+                    label += ', ' + typeOSFormatted;
+                } else {
+                    label = typeOSFormatted;
+                }
+            }
+            
+            // If both Primary Name and Type (OS) are null, try Type (OSM) with formatting
+            if (!label && typeOSM) {
+                label = toSentenceCase(typeOSM);
+            }
+            
+            // Default to 'Feature'
+            return label || 'Feature';
+        }
+        
+        // Load Features Near Parks dataset
+        async function loadFeaturesNearParks(authority) {
+            try {
+                // Remove existing layer
+                if (mapState.featuresNearParksLayer && mapState.featuresNearParksLayer.layer) {
+                    map.removeLayer(mapState.featuresNearParksLayer.layer);
+                }
+                
+                const authPath = getAuthorityPath(authority.id);
+                const authName = authority.name;
+                const featuresFilename = `${authName}_features_not_in_pp_or_g.geojson`;
+                
+                try {
+                    const response = await fetch(`${authPath}${featuresFilename}`);
+                    if (!response.ok) {
+                        console.log(`Features near parks file not found: ${featuresFilename}`);
+                        return;
+                    }
+                    
+                    const featuresData = await response.json();
+                    if (!featuresData.features || featuresData.features.length === 0) {
+                        console.log(`No features data found near parks for authority: ${authority.name}`);
+                        return;
+                    }
+                    
+                    // Create feature group for features near parks
+                    const featuresGroup = L.featureGroup();
+                    
+                    // Use proj4.js for coordinate transformation (already loaded in HTML)
+                    featuresData.features.forEach(feature => {
+                        try {
+                            // Transform geometry from EPSG:27700 to EPSG:4326
+                            const transformedGeometry = transformCoordinates(feature.geometry);
+                            
+                            if (!transformedGeometry) {
+                                return;
+                            }
+                            
+                            if (feature.geometry.type === 'Point') {
+                                const coords = transformedGeometry.coordinates;
+                                const marker = L.circleMarker([coords[1], coords[0]], {
+                                    radius: 5,
+                                    color: '#FF9800',
+                                    weight: 2,
+                                    opacity: 0.8,
+                                    fill: true,
+                                    fillColor: '#FF9800',
+                                    fillOpacity: 0.3
+                                });
+                                
+                                const featureName = getFeatureLabelNear(feature.properties);
+                                marker.bindTooltip(featureName, {
+                                    permanent: false,
+                                    direction: 'top',
+                                    className: 'features-near-parks-tooltip'
+                                });
+                                
+                                featuresGroup.addLayer(marker);
+                            } else if (feature.geometry.type === 'Polygon') {
+                                const coords = transformedGeometry.coordinates[0].map(c => [c[1], c[0]]);
+                                const polygon = L.polygon(coords, {
+                                    color: '#FF9800',
+                                    weight: 2,
+                                    opacity: 0.8,
+                                    dashArray: '5, 5',
+                                    fill: true,
+                                    fillColor: '#FF9800',
+                                    fillOpacity: 0.05,
+                                    lineCap: 'butt'
+                                });
+                                
+                                const featureName = getFeatureLabelNear(feature.properties);
+                                polygon.bindTooltip(featureName, {
+                                    permanent: false,
+                                    direction: 'top',
+                                    className: 'features-near-parks-tooltip'
+                                });
+                                
+                                featuresGroup.addLayer(polygon);
+                            } else if (feature.geometry.type === 'LineString') {
+                                const coords = transformedGeometry.coordinates.map(c => [c[1], c[0]]);
+                                const line = L.polyline(coords, {
+                                    color: '#FF9800',
+                                    weight: 2,
+                                    opacity: 0.8,
+                                    dashArray: '5, 5',
+                                    lineCap: 'butt'
+                                });
+                                
+                                const featureName = getFeatureLabelNear(feature.properties);
+                                line.bindTooltip(featureName, {
+                                    permanent: false,
+                                    direction: 'top',
+                                    className: 'features-near-parks-tooltip'
+                                });
+                                
+                                featuresGroup.addLayer(line);
+                            }
+                        } catch (e) {
+                            console.warn('Error processing feature:', e);
+                        }
+                    });
+                    
+                    // Store layer info for toggling
+                    mapState.featuresNearParksLayer = {
+                        id: 'features-near-parks',
+                        name: 'Features Near Parks',
+                        layer: featuresGroup,
+                        visible: false
+                    };
+                    
+                    console.log(`Loaded ${featuresData.features.length} features near parks for ${authority.name}`);
+                } catch (error) {
+                    console.error('Error loading features near parks:', error);
+                }
+            } catch (error) {
+                console.error('Error in loadFeaturesNearParks:', error);
+            }
+        }
+        
+        // Load Demographics data for selected authority
+        async function loadDemographicsData(park) {
+            try {
+                // Remove existing demographics layer
+                if (mapState.demographicsLayer && mapState.demographicsLayer.layer) {
+                    map.removeLayer(mapState.demographicsLayer.layer);
+                }
+                
+                const authPath = getAuthorityPath(mapState.currentAuthority.id);
+                const authName = mapState.currentAuthority.name;
+                const demographicsPath = `${authPath}demo/`;
+                
+                // Get the park's official ID
+                if (!park.id) {
+                    console.log(`No official park id found for park: ${park.name}`);
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`${demographicsPath}${authName}_15_min.geojson`);
+                    if (!response.ok) {
+                        console.log(`Demographics file not found for authority: ${authName}`);
+                        return;
+                    }
+                    
+                    const demographicsData = await response.json();
+                    if (!demographicsData.features || demographicsData.features.length === 0) {
+                        console.log(`No demographics data found for authority: ${authName}`);
+                        return;
+                    }
+                    
+                    // Filter features to only those matching this park's ID
+                    const parkDemographics = demographicsData.features.filter(feature => 
+                        feature.properties.park_offical_id === park.id
+                    );
+                    
+                    if (parkDemographics.length === 0) {
+                        console.log(`No demographics data found for park: ${park.name}`);
+                        return;
+                    }
+                    
+                    // Create feature group for demographics
+                    const demographicsGroup = L.featureGroup();
+                    
+                    // Use proj4.js for coordinate transformation (CRS: EPSG:27700)
+                    parkDemographics.forEach(feature => {
+                        try {
+                            // Transform geometry from EPSG:27700 to EPSG:4326
+                            const transformedGeometry = transformCoordinates(feature.geometry);
+                            
+                            if (!transformedGeometry || feature.geometry.type !== 'Polygon') {
+                                return;
+                            }
+                            
+                            const coords = transformedGeometry.coordinates[0].map(c => [c[1], c[0]]);
+                            const polygon = L.polygon(coords, {
+                                color: '#9C27B0',
+                                weight: 1.5,
+                                opacity: 0.6,
+                                fill: true,
+                                fillColor: '#9C27B0',
+                                fillOpacity: 0.08,
+                                lineCap: 'round'
+                            });
+                            
+                            // Build popup content with all properties as a bulleted list
+                            const props = feature.properties;
+                            let bulletList = '<ul style="margin: 4px 0; padding-left: 20px;">';
+                            
+                            // Add each property as a bullet point
+                            for (const [key, value] of Object.entries(props)) {
+                                // Format the key for display (remove underscores, add spaces)
+                                const displayKey = key.replace(/_/g, ' ');
+                                bulletList += `<li style="margin: 2px 0;"><strong>${displayKey}:</strong> ${value}</li>`;
+                            }
+                            
+                            bulletList += '</ul>';
+                            
+                            const popupContent = `
+                                <div style="font-family: Arial, sans-serif; font-size: 12px; width: 250px; max-height: 300px; overflow-y: auto;">
+                                    ${bulletList}
+                                </div>
+                            `;
+                            
+                            polygon.bindPopup(popupContent);
+                            demographicsGroup.addLayer(polygon);
+                        } catch (e) {
+                            console.warn('Error processing demographics feature:', e);
+                        }
+                    });
+                    
+                    // Store layer info for toggling
+                    mapState.demographicsLayer = {
+                        id: 'demographics',
+                        name: 'Demographics (15 min catchment)',
+                        layer: demographicsGroup,
+                        visible: false
+                    };
+                    
+                    console.log(`Loaded demographics data for ${park.name}`);
+                } catch (error) {
+                    console.log(`Demographics data not available for this authority (${authName})`);
+                }
+            } catch (error) {
+                console.error('Error in loadDemographicsData:', error);
+            }
+        }
+        
+        // Load Regional Cycling Network for all authorities
+        async function loadRegionalCyclingNetwork() {
+            try {
+                // Remove existing cycling network layer if present
+                if (mapState.cyclingNetworkLayer && mapState.cyclingNetworkLayer.layer) {
+                    map.removeLayer(mapState.cyclingNetworkLayer.layer);
+                }
+                
+                // Create feature group for all cycling networks
+                const cyclingGroup = L.featureGroup();
+                let totalSegments = 0;
+                
+                // Load cycling network for each authority
+                for (const authority of mapState.authorities) {
+                    try {
+                        const authPath = getAuthorityPath(authority.id);
+                        const authName = authority.name;
+                        const cyclingFilename = `${authName}_national_cycle_network.geojson`;
+                        
+                        const response = await fetch(`${authPath}${cyclingFilename}`);
+                        if (!response.ok) {
+                            console.log(`Cycling network file not found for ${authName}`);
+                            continue;
+                        }
+                        
+                        const cyclingData = await response.json();
+                        
+                        if (!cyclingData.features || cyclingData.features.length === 0) {
+                            console.log(`No cycling network data for ${authName}`);
+                            continue;
+                        }
+                        
+                        cyclingData.features.forEach(feature => {
+                            // Handle both LineString and MultiLineString geometries
+                            const geometries = [];
+                            if (feature.geometry.type === 'LineString') {
+                                geometries.push(feature.geometry.coordinates);
+                            } else if (feature.geometry.type === 'MultiLineString') {
+                                geometries.push(...feature.geometry.coordinates);
+                            }
+                            
+                            geometries.forEach(geoJsonCoords => {
+                                // Convert from GeoJSON [lng, lat] to Leaflet [lat, lng]
+                                const leafletCoords = geoJsonCoords.map(coord => [coord[1], coord[0]]);
+                                
+                                // Create line for cycling network segment
+                                const line = L.polyline(leafletCoords, {
+                                    color: '#FF6B35',
+                                    weight: 2.5,
+                                    opacity: 0.8,
+                                    lineCap: 'round',
+                                    lineJoin: 'round'
+                                });
+                                
+                                // Add popup with cycling route info if available
+                                if (feature.properties && feature.properties.name) {
+                                    line.bindPopup(`<strong>${feature.properties.name}</strong>`);
+                                }
+                                
+                                // Add tooltip
+                                line.bindTooltip('National Cycle Network', { 
+                                    permanent: false, 
+                                    direction: 'top',
+                                    className: 'cycling-tooltip'
+                                });
+                                
+                                cyclingGroup.addLayer(line);
+                                totalSegments++;
+                            });
+                        });
+                    } catch (error) {
+                        console.error(`Error loading cycling network for ${authority.name}:`, error);
+                    }
+                }
+                
+                // Store layer info for toggling
+                mapState.cyclingNetworkLayer = {
+                    id: 'cycling-network',
+                    name: 'National Cycling Network',
+                    layer: cyclingGroup,
+                    visible: false
+                };
+                
+                console.log(`Loaded regional cycling network: ${totalSegments} segments across all authorities`);
+            } catch (error) {
+                console.error('Error in loadRegionalCyclingNetwork:', error);
+            }
+        }
+        
+        // Populate layer toggles
+        function populateLayerToggles(layers) {
+            const container = document.getElementById('dataLayerToggles');
+            const hr = document.getElementById('layerHR');
+            const hint = document.getElementById('layerHint');
+            
+            container.innerHTML = '';
+            
+            layers.forEach(layerInfo => {
+                const label = document.createElement('label');
+                label.className = 'toggle-label';
+                
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.id = `toggle-${layerInfo.id}`;
+                input.checked = layerInfo.visible;
+                input.setAttribute('role', 'switch');
+                input.setAttribute('aria-label', `Toggle ${layerInfo.name} layer`);
+                
+                const span = document.createElement('span');
+                span.textContent = layerInfo.name;
+                
+                input.addEventListener('change', function() {
+                    toggleDataLayer(layerInfo.id, this.checked);
+                });
+                
+                label.appendChild(input);
+                label.appendChild(span);
+                container.appendChild(label);
+            });
+            
+            // Show the toggles, hint, and separator line
+            container.style.display = 'flex';
+            hint.style.display = 'block';
+            hr.style.display = 'block';
+        }
+        
+        // Toggle data layer visibility
+        function toggleDataLayer(layerId, visible) {
+            console.log('toggleDataLayer called:', layerId, visible);
+            
+            if (layerId === 'park-boundary' && mapState.parkBoundaryLayer) {
+                const layerObj = mapState.parkBoundaryLayer;
+                console.log('Park boundary layer found, toggling visibility:', visible);
+                
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                        console.log('Park boundary layer added to map');
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                        console.log('Park boundary layer removed from map');
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling park boundary layer:', error);
+                }
+            } else if (layerId === 'all-parks' && mapState.otherParksLayer) {
+                const layerObj = mapState.otherParksLayer;
+                console.log('Other parks layer found, toggling visibility:', visible);
+                
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                        console.log('Other parks layer added to map');
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                        console.log('Other parks layer removed from map');
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling other parks layer:', error);
+                }
+            } else if (layerId === 'park-entrances' && mapState.entrancesLayer) {
+                const layerObj = mapState.entrancesLayer;
+                console.log('Park entrances layer found, toggling visibility:', visible);
+                
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                        console.log('Park entrances layer added to map');
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                        console.log('Park entrances layer removed from map');
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling park entrances layer:', error);
+                }
+            } else if (layerId === 'visibility-hexagons' && mapState.visibilityLayer) {
+                const layerObj = mapState.visibilityLayer;
+                console.log('Visibility layer found, toggling visibility:', visible);
+                
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                        console.log('Visibility layer added to map');
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                        console.log('Visibility layer removed from map');
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling visibility layer:', error);
+                }
+            } else if (layerId === 'foliage-low-hexagons' && mapState.foliageLowLayer) {
+                const layerObj = mapState.foliageLowLayer;
+                console.log('Foliage low layer found, toggling visibility:', visible);
+                
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                        console.log('Foliage low layer added to map');
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                        console.log('Foliage low layer removed from map');
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling foliage low layer:', error);
+                }
+            } else if (layerId === 'foliage-mid-hexagons' && mapState.foliageMidLayer) {
+                const layerObj = mapState.foliageMidLayer;
+                console.log('Foliage mid layer found, toggling visibility:', visible);
+                
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                        console.log('Foliage mid layer added to map');
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                        console.log('Foliage mid layer removed from map');
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling foliage mid layer:', error);
+                }
+            } else if (layerId === 'foliage-tall-hexagons' && mapState.foliageTallLayer) {
+                const layerObj = mapState.foliageTallLayer;
+                console.log('Foliage tall layer found, toggling visibility:', visible);
+                
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                        console.log('Foliage tall layer added to map');
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                        console.log('Foliage tall layer removed from map');
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling foliage tall layer:', error);
+                }
+            } else if (layerId === 'nach-network' && mapState.nachLayer) {
+                const layerObj = mapState.nachLayer;
+                console.log('NACH layer found, toggling visibility:', visible);
+                
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                        console.log('NACH layer added to map');
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                        console.log('NACH layer removed from map');
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling NACH layer:', error);
+                }
+            } else if (layerId === 'toilet-facilities' && mapState.toiletLayer) {
+                const layerObj = mapState.toiletLayer;
+                console.log('Toilet layer found, toggling visibility:', visible);
+                
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                        console.log('Toilet layer added to map');
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                        console.log('Toilet layer removed from map');
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling toilet layer:', error);
+                }
+            } else if (layerId === 'cycling-network' && mapState.cyclingNetworkLayer) {
+                const layerObj = mapState.cyclingNetworkLayer;
+                console.log('Cycling network layer found, toggling visibility:', visible);
+                
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                        console.log('Cycling network layer added to map');
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                        console.log('Cycling network layer removed from map');
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling cycling network layer:', error);
+                }
+            } else if (layerId === 'features-in-parks' && mapState.featuresInParksLayer) {
+                const layerObj = mapState.featuresInParksLayer;
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling features in parks layer:', error);
+                }
+            } else if (layerId === 'features-near-parks' && mapState.featuresNearParksLayer) {
+                const layerObj = mapState.featuresNearParksLayer;
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling features near parks layer:', error);
+                }
+            } else if (layerId === 'demographics' && mapState.demographicsLayer) {
+                const layerObj = mapState.demographicsLayer;
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling demographics layer:', error);
+                }
+            } else if (layerId === 'park-cycling' && mapState.cyclingLayer) {
+                const layerObj = mapState.cyclingLayer;
+                console.log('Cycling layer found, toggling visibility:', visible);
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                        console.log('Cycling layer added to map');
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                        console.log('Cycling layer removed from map');
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling cycling dataset layer:', error);
+                }
+            } else if (layerId === 'park-walking' && mapState.walkingLayer) {
+                const layerObj = mapState.walkingLayer;
+                console.log('Walking layer found, toggling visibility:', visible);
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                        console.log('Walking layer added to map');
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                        console.log('Walking layer removed from map');
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling walking dataset layer:', error);
+                }
+            } else {
+                console.warn('toggleDataLayer: layer not found or condition not met', {layerId, cyclingLayer: !!mapState.cyclingLayer, walkingLayer: !!mapState.walkingLayer});
+            }
+            
+            // Update legend after toggle
+            updateLegend();
+        }
+        
+        // Build and update legend based on visible layers
+        function updateLegend() {
+            const legendItems = document.getElementById('legendItems');
+            const legendPanel = document.getElementById('legendPanel');
+            const visibleLayers = [];
+            
+            // Collect visible layers
+            if (mapState.parkBoundaryLayer && mapState.parkBoundaryLayer.visible) {
+                visibleLayers.push({
+                    id: 'park-boundary',
+                    name: 'Park Boundary',
+                    type: 'outline'
+                });
+            }
+            
+            if (mapState.otherParksLayer && mapState.otherParksLayer.visible) {
+                visibleLayers.push({
+                    id: 'all-parks',
+                    name: 'Nearby Parks',
+                    type: 'filled'
+                });
+            }
+            
+            if (mapState.entrancesLayer && mapState.entrancesLayer.visible) {
+                visibleLayers.push({
+                    id: 'park-entrances',
+                    name: 'Park Entrances',
+                    type: 'entrances'
+                });
+            }
+            
+            if (mapState.visibilityLayer && mapState.visibilityLayer.visible) {
+                visibleLayers.push({
+                    id: 'visibility-hexagons',
+                    name: 'Visibility Analysis',
+                    type: 'visibility'
+                });
+            }
+            
+            if (mapState.foliageLowLayer && mapState.foliageLowLayer.visible) {
+                visibleLayers.push({
+                    id: 'foliage-low-hexagons',
+                    name: 'Low Foliage (<0.5m)',
+                    type: 'foliage-low'
+                });
+            }
+            
+            if (mapState.foliageMidLayer && mapState.foliageMidLayer.visible) {
+                visibleLayers.push({
+                    id: 'foliage-mid-hexagons',
+                    name: 'Mid Foliage (0.5-2m)',
+                    type: 'foliage-mid'
+                });
+            }
+            
+            if (mapState.foliageTallLayer && mapState.foliageTallLayer.visible) {
+                visibleLayers.push({
+                    id: 'foliage-tall-hexagons',
+                    name: 'Tall Foliage (2m+)',
+                    type: 'foliage-tall'
+                });
+            }
+            
+            if (mapState.nachLayer && mapState.nachLayer.visible) {
+                visibleLayers.push({
+                    id: 'nach-network',
+                    name: 'Predicted Route Popularity (NACH)',
+                    type: 'nach'
+                });
+            }
+            
+            if (mapState.toiletLayer && mapState.toiletLayer.visible) {
+                visibleLayers.push({
+                    id: 'toilet-facilities',
+                    name: 'Toilet Facilities',
+                    type: 'toilet'
+                });
+            }
+            
+            if (mapState.cyclingLayer && mapState.cyclingLayer.visible) {
+                visibleLayers.push({
+                    id: 'park-cycling',
+                    name: 'Cycling Routes',
+                    type: 'park-cycling'
+                });
+            }
+            
+            if (mapState.walkingLayer && mapState.walkingLayer.visible) {
+                visibleLayers.push({
+                    id: 'park-walking',
+                    name: 'Walking Routes',
+                    type: 'park-walking'
+                });
+            }
+            
+            if (mapState.cyclingNetworkLayer && mapState.cyclingNetworkLayer.visible) {
+                visibleLayers.push({
+                    id: 'cycling-network',
+                    name: 'National Cycling Network',
+                    type: 'cycling'
+                });
+            }
+            
+            if (mapState.streetLampsLayer && mapState.streetLampsLayer.visible) {
+                visibleLayers.push({
+                    id: 'street-lamps',
+                    name: 'Street Lamps',
+                    type: 'street-lamps'
+                });
+            }
+            
+            // Clear existing items
+            legendItems.innerHTML = '';
+            
+            // Show legend if there are visible layers
+            if (visibleLayers.length > 0) {
+                legendPanel.style.display = 'block';
+            } else {
+                legendPanel.style.display = 'none';
+                return;
+            }
+            
+            // Build legend items
+            visibleLayers.forEach(layer => {
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+                
+                const marker = document.createElement('div');
+                marker.className = 'legend-marker';
+                
+                if (layer.type === 'outline') {
+                    marker.className += ' outline';
+                } else if (layer.type === 'filled') {
+                    marker.className += ' filled';
+                } else if (layer.type === 'entrances') {
+                    // Show both primary and secondary entrance examples
+                    const label = document.createElement('span');
+                    label.textContent = layer.name;
+                    
+                    const entranceGroup = document.createElement('div');
+                    entranceGroup.style.marginBottom = '0.75rem';
+                    
+                    const entranceLabel = document.createElement('span');
+                    entranceLabel.style.fontSize = '0.85rem';
+                    entranceLabel.style.fontWeight = '500';
+                    entranceLabel.style.marginBottom = '0.25rem';
+                    entranceLabel.style.display = 'block';
+                    entranceLabel.textContent = layer.name;
+                    entranceGroup.appendChild(entranceLabel);
+                    
+                    // Primary entrance
+                    const primaryItem = document.createElement('div');
+                    primaryItem.style.display = 'flex';
+                    primaryItem.style.alignItems = 'center';
+                    primaryItem.style.gap = '0.5rem';
+                    primaryItem.style.marginBottom = '0.25rem';
+                    primaryItem.style.fontSize = '0.85rem';
+                    
+                    const primaryMarker = document.createElement('div');
+                    primaryMarker.className = 'legend-marker circle primary';
+                    primaryItem.appendChild(primaryMarker);
+                    
+                    const primaryLabel = document.createElement('span');
+                    primaryLabel.textContent = 'Primary';
+                    primaryItem.appendChild(primaryLabel);
+                    
+                    entranceGroup.appendChild(primaryItem);
+                    
+                    // Secondary entrance
+                    const secondaryItem = document.createElement('div');
+                    secondaryItem.style.display = 'flex';
+                    secondaryItem.style.alignItems = 'center';
+                    secondaryItem.style.gap = '0.5rem';
+                    secondaryItem.style.fontSize = '0.85rem';
+                    
+                    const secondaryMarker = document.createElement('div');
+                    secondaryMarker.className = 'legend-marker circle secondary';
+                    secondaryItem.appendChild(secondaryMarker);
+                    
+                    const secondaryLabel = document.createElement('span');
+                    secondaryLabel.textContent = 'Secondary';
+                    secondaryItem.appendChild(secondaryLabel);
+                    
+                    entranceGroup.appendChild(secondaryItem);
+                    legendItems.appendChild(entranceGroup);
+                    return;
+                } else if (layer.type === 'visibility') {
+                    // Create visibility gradient legend
+                    const label = document.createElement('span');
+                    label.style.fontSize = '0.85rem';
+                    label.style.fontWeight = '500';
+                    label.style.marginBottom = '0.25rem';
+                    label.style.display = 'block';
+                    label.textContent = layer.name;
+                    
+                    const visibilityGroup = document.createElement('div');
+                    visibilityGroup.style.marginBottom = '0.75rem';
+                    visibilityGroup.appendChild(label);
+                    
+                    // Create gradient bar
+                    const gradientBar = document.createElement('div');
+                    gradientBar.style.width = '100%';
+                    gradientBar.style.height = '20px';
+                    gradientBar.style.background = 'linear-gradient(to right, #440154, #31688e, #35b779, #fde724)';
+                    gradientBar.style.borderRadius = '4px';
+                    gradientBar.style.marginBottom = '0.25rem';
+                    visibilityGroup.appendChild(gradientBar);
+                    
+                    // Add labels
+                    const labelContainer = document.createElement('div');
+                    labelContainer.style.display = 'flex';
+                    labelContainer.style.justifyContent = 'space-between';
+                    labelContainer.style.fontSize = '0.75rem';
+                    labelContainer.style.color = '#666';
+                    labelContainer.innerHTML = '<span>Low</span><span>High</span>';
+                    visibilityGroup.appendChild(labelContainer);
+                    
+                    legendItems.appendChild(visibilityGroup);
+                    return;
+                } else if (layer.type === 'foliage-low') {
+                    // Create low foliage gradient legend (white to green)
+                    const label = document.createElement('span');
+                    label.style.fontSize = '0.85rem';
+                    label.style.fontWeight = '500';
+                    label.style.marginBottom = '0.25rem';
+                    label.style.display = 'block';
+                    label.textContent = layer.name;
+                    
+                    const foliageGroup = document.createElement('div');
+                    foliageGroup.style.marginBottom = '0.75rem';
+                    foliageGroup.appendChild(label);
+                    
+                    // Create gradient bar (white to green)
+                    const gradientBar = document.createElement('div');
+                    gradientBar.style.width = '100%';
+                    gradientBar.style.height = '20px';
+                    gradientBar.style.background = 'linear-gradient(to right, #ffffff, #e8f5e9, #c8e6c9, #81c784, #4caf50, #2e7d32, #1b5e20)';
+                    gradientBar.style.borderRadius = '4px';
+                    gradientBar.style.marginBottom = '0.25rem';
+                    foliageGroup.appendChild(gradientBar);
+                    
+                    // Add labels
+                    const labelContainer = document.createElement('div');
+                    labelContainer.style.display = 'flex';
+                    labelContainer.style.justifyContent = 'space-between';
+                    labelContainer.style.fontSize = '0.75rem';
+                    labelContainer.style.color = '#666';
+                    labelContainer.innerHTML = '<span>10%</span><span>100%</span>';
+                    foliageGroup.appendChild(labelContainer);
+                    
+                    legendItems.appendChild(foliageGroup);
+                    return;
+                } else if (layer.type === 'foliage-mid') {
+                    // Create mid foliage gradient legend (white to green)
+                    const label = document.createElement('span');
+                    label.style.fontSize = '0.85rem';
+                    label.style.fontWeight = '500';
+                    label.style.marginBottom = '0.25rem';
+                    label.style.display = 'block';
+                    label.textContent = layer.name;
+                    
+                    const foliageGroup = document.createElement('div');
+                    foliageGroup.style.marginBottom = '0.75rem';
+                    foliageGroup.appendChild(label);
+                    
+                    // Create gradient bar (white to green)
+                    const gradientBar = document.createElement('div');
+                    gradientBar.style.width = '100%';
+                    gradientBar.style.height = '20px';
+                    gradientBar.style.background = 'linear-gradient(to right, #ffffff, #e8f5e9, #c8e6c9, #81c784, #4caf50, #2e7d32, #1b5e20)';
+                    gradientBar.style.borderRadius = '4px';
+                    gradientBar.style.marginBottom = '0.25rem';
+                    foliageGroup.appendChild(gradientBar);
+                    
+                    // Add labels
+                    const labelContainer = document.createElement('div');
+                    labelContainer.style.display = 'flex';
+                    labelContainer.style.justifyContent = 'space-between';
+                    labelContainer.style.fontSize = '0.75rem';
+                    labelContainer.style.color = '#666';
+                    labelContainer.innerHTML = '<span>10%</span><span>100%</span>';
+                    foliageGroup.appendChild(labelContainer);
+                    
+                    legendItems.appendChild(foliageGroup);
+                    return;
+                } else if (layer.type === 'foliage-tall') {
+                    // Create tall foliage gradient legend (white to green)
+                    const label = document.createElement('span');
+                    label.style.fontSize = '0.85rem';
+                    label.style.fontWeight = '500';
+                    label.style.marginBottom = '0.25rem';
+                    label.style.display = 'block';
+                    label.textContent = layer.name;
+                    
+                    const foliageGroup = document.createElement('div');
+                    foliageGroup.style.marginBottom = '0.75rem';
+                    foliageGroup.appendChild(label);
+                    
+                    // Create gradient bar (white to green)
+                    const gradientBar = document.createElement('div');
+                    gradientBar.style.width = '100%';
+                    gradientBar.style.height = '20px';
+                    gradientBar.style.background = 'linear-gradient(to right, #ffffff, #e8f5e9, #c8e6c9, #81c784, #4caf50, #2e7d32, #1b5e20)';
+                    gradientBar.style.borderRadius = '4px';
+                    gradientBar.style.marginBottom = '0.25rem';
+                    foliageGroup.appendChild(gradientBar);
+                    
+                    // Add labels
+                    const labelContainer = document.createElement('div');
+                    labelContainer.style.display = 'flex';
+                    labelContainer.style.justifyContent = 'space-between';
+                    labelContainer.style.fontSize = '0.75rem';
+                    labelContainer.style.color = '#666';
+                    labelContainer.innerHTML = '<span>10%</span><span>100%</span>';
+                    foliageGroup.appendChild(labelContainer);
+                    
+                    legendItems.appendChild(foliageGroup);
+                    return;
+                } else if (layer.type === 'nach') {
+                    // Create NACH (Predicted Route Popularity) greyscale gradient legend
+                    const label = document.createElement('span');
+                    label.style.fontSize = '0.85rem';
+                    label.style.fontWeight = '500';
+                    label.style.marginBottom = '0.25rem';
+                    label.style.display = 'block';
+                    label.textContent = layer.name;
+                    
+                    const nachGroup = document.createElement('div');
+                    nachGroup.style.marginBottom = '0.75rem';
+                    nachGroup.appendChild(label);
+                    
+                    // Create gradient bar (white to black greyscale)
+                    const gradientBar = document.createElement('div');
+                    gradientBar.style.width = '100%';
+                    gradientBar.style.height = '20px';
+                    gradientBar.style.background = 'linear-gradient(to right, #ffffff, #e6e6e6, #cccccc, #999999, #666666, #333333, #000000)';
+                    gradientBar.style.borderRadius = '4px';
+                    gradientBar.style.marginBottom = '0.25rem';
+                    nachGroup.appendChild(gradientBar);
+                    
+                    // Add labels
+                    const labelContainer = document.createElement('div');
+                    labelContainer.style.display = 'flex';
+                    labelContainer.style.justifyContent = 'space-between';
+                    labelContainer.style.fontSize = '0.75rem';
+                    labelContainer.style.color = '#666';
+                    labelContainer.innerHTML = '<span>Low</span><span>High</span>';
+                    nachGroup.appendChild(labelContainer);
+                    
+                    legendItems.appendChild(nachGroup);
+                    return;
+                } else if (layer.type === 'toilet') {
+                    // Create toilet facilities legend
+                    const toiletGroup = document.createElement('div');
+                    toiletGroup.style.marginBottom = '0.75rem';
+                    
+                    // Create marker
+                    const toiletMarker = document.createElement('div');
+                    toiletMarker.style.display = 'flex';
+                    toiletMarker.style.alignItems = 'center';
+                    toiletMarker.style.gap = '0.5rem';
+                    
+                    const square = document.createElement('div');
+                    square.style.width = '16px';
+                    square.style.height = '16px';
+                    square.style.backgroundColor = '#007BFF';
+                    square.style.borderRadius = '2px';
+                    
+                    toiletMarker.appendChild(square);
+                    toiletMarker.appendChild(document.createTextNode('Toilet Facilities'));
+                    
+                    toiletGroup.appendChild(toiletMarker);
+                    legendItems.appendChild(toiletGroup);
+                    return;
+                } else if (layer.type === 'park-cycling') {
+                    // Create cycling routes legend
+                    const cyclingGroup = document.createElement('div');
+                    cyclingGroup.style.marginBottom = '0.75rem';
+                    cyclingGroup.style.display = 'flex';
+                    cyclingGroup.style.alignItems = 'center';
+                    cyclingGroup.style.gap = '0.5rem';
+                    
+                    const line = document.createElement('div');
+                    line.style.width = '24px';
+                    line.style.height = '0px';
+                    line.style.borderTop = '3px dashed #2196F3';
+                    line.style.flexShrink = '0';
+                    
+                    cyclingGroup.appendChild(line);
+                    cyclingGroup.appendChild(document.createTextNode('Cycling Routes'));
+                    
+                    legendItems.appendChild(cyclingGroup);
+                    return;
+                } else if (layer.type === 'park-walking') {
+                    // Create walking routes legend
+                    const walkingGroup = document.createElement('div');
+                    walkingGroup.style.marginBottom = '0.75rem';
+                    walkingGroup.style.display = 'flex';
+                    walkingGroup.style.alignItems = 'center';
+                    walkingGroup.style.gap = '0.5rem';
+                    
+                    const line = document.createElement('div');
+                    line.style.width = '24px';
+                    line.style.height = '3px';
+                    line.style.backgroundColor = '#FF6F00';
+                    line.style.borderRadius = '2px';
+                    line.style.flexShrink = '0';
+                    
+                    walkingGroup.appendChild(line);
+                    walkingGroup.appendChild(document.createTextNode('Walking Routes'));
+                    
+                    legendItems.appendChild(walkingGroup);
+                    return;
+                } else if (layer.type === 'cycling') {
+                    // Create cycling network legend
+                    const cyclingGroup = document.createElement('div');
+                    cyclingGroup.style.marginBottom = '0.75rem';
+                    
+                    // Create marker
+                    const cyclingMarker = document.createElement('div');
+                    cyclingMarker.style.display = 'flex';
+                    cyclingMarker.style.alignItems = 'center';
+                    cyclingMarker.style.gap = '0.5rem';
+                    
+                    const line = document.createElement('div');
+                    line.style.width = '24px';
+                    line.style.height = '3px';
+                    line.style.backgroundColor = '#FF6B35';
+                    line.style.borderRadius = '2px';
+                    
+                    cyclingMarker.appendChild(line);
+                    cyclingMarker.appendChild(document.createTextNode('National Cycling Network'));
+                    
+                    cyclingGroup.appendChild(cyclingMarker);
+                    legendItems.appendChild(cyclingGroup);
+                    return;
+                } else if (layer.type === 'street-lamps') {
+                    // Create street lamps legend
+                    const lampsGroup = document.createElement('div');
+                    lampsGroup.style.marginBottom = '0.75rem';
+                    
+                    // Create marker
+                    const lampsMarker = document.createElement('div');
+                    lampsMarker.style.display = 'flex';
+                    lampsMarker.style.alignItems = 'center';
+                    lampsMarker.style.gap = '0.5rem';
+                    
+                    const circle = document.createElement('div');
+                    circle.style.width = '12px';
+                    circle.style.height = '12px';
+                    circle.style.backgroundColor = '#FFD700';
+                    circle.style.border = '2px solid #FFD700';
+                    circle.style.borderRadius = '50%';
+                    
+                    lampsMarker.appendChild(circle);
+                    lampsMarker.appendChild(document.createTextNode('Street Lamps'));
+                    
+                    lampsGroup.appendChild(lampsMarker);
+                    legendItems.appendChild(lampsGroup);
+                    return;
+                }
+                
+                item.appendChild(marker);
+                
+                const label = document.createElement('span');
+                label.textContent = layer.name;
+                item.appendChild(label);
+                
+                legendItems.appendChild(item);
+            });
+        }
+        
+        // Reset map view
+        document.getElementById('resetMapBtn').addEventListener('click', () => {
+            map.setView([54.0, -1.5], 7);
+            if (mapState.parksLayer) {
+                map.removeLayer(mapState.parksLayer);
+                mapState.parksLayer = null;
+            }
+            if (mapState.entrancesLayer && mapState.entrancesLayer.layer) {
+                map.removeLayer(mapState.entrancesLayer.layer);
+                mapState.entrancesLayer = null;
+            }
+            if (mapState.visibilityLayer && mapState.visibilityLayer.layer) {
+                map.removeLayer(mapState.visibilityLayer.layer);
+                mapState.visibilityLayer = null;
+            }
+            if (mapState.nachLayer && mapState.nachLayer.layer) {
+                map.removeLayer(mapState.nachLayer.layer);
+                mapState.nachLayer = null;
+            }
+            if (mapState.foliageLowLayer && mapState.foliageLowLayer.layer) {
+                map.removeLayer(mapState.foliageLowLayer.layer);
+                mapState.foliageLowLayer = null;
+            }
+            if (mapState.foliageMidLayer && mapState.foliageMidLayer.layer) {
+                map.removeLayer(mapState.foliageMidLayer.layer);
+                mapState.foliageMidLayer = null;
+            }
+            if (mapState.foliageTallLayer && mapState.foliageTallLayer.layer) {
+                map.removeLayer(mapState.foliageTallLayer.layer);
+                mapState.foliageTallLayer = null;
+            }
+            if (mapState.allParksLayer) {
+                // Make sure all parks layer is visible
+                if (!map.hasLayer(mapState.allParksLayer)) {
+                    mapState.allParksLayer.addTo(map);
+                }
+                // Fit to all parks if they exist
+                const bounds = mapState.allParksLayer.getBounds();
+                if (bounds.isValid()) {
+                    map.fitBounds(bounds, { padding: [50, 50] });
+                }
+            }
+            
+            // Reset layer visibility states
+            if (mapState.parkBoundaryLayer) {
+                mapState.parkBoundaryLayer.visible = true;
+            }
+            if (mapState.otherParksLayer) {
+                mapState.otherParksLayer.visible = true;
+            }
+            if (mapState.entrancesLayer) {
+                mapState.entrancesLayer.visible = true;
+            }
+            
+            // Hide layer toggles when resetting
+            document.getElementById('dataLayerToggles').style.display = 'none';
+            document.getElementById('layerHint').style.display = 'none';
+            document.getElementById('layerHR').style.display = 'none';
+            document.getElementById('legendPanel').style.display = 'none';
+            
+            document.getElementById('parks').value = '';
+            
+            // Hide park name in nav
+            const navParkName = document.getElementById('navParkName');
+            navParkName.style.display = 'none';
+        });
+        
+
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Page loaded, initializing dashboard...');
+            
+            // Handle controls accordion toggle
+            const accordionTrigger = document.getElementById('controls-heading');
+            const accordionPanel = document.getElementById('controls-content');
+            
+            if (accordionTrigger && accordionPanel) {
+                accordionTrigger.addEventListener('click', () => {
+                    const isExpanded = accordionTrigger.getAttribute('aria-expanded') === 'true';
+                    accordionTrigger.setAttribute('aria-expanded', !isExpanded);
+                    
+                    if (isExpanded) {
+                        accordionPanel.style.display = 'none';
+                    } else {
+                        accordionPanel.style.display = 'block';
+                    }
+                });
+            }
+            
+            // Handle legend accordion toggle
+            const legendTrigger = document.getElementById('legend-heading');
+            const legendPanel = document.getElementById('legend-content');
+            
+            if (legendTrigger && legendPanel) {
+                legendTrigger.addEventListener('click', () => {
+                    const isExpanded = legendTrigger.getAttribute('aria-expanded') === 'true';
+                    legendTrigger.setAttribute('aria-expanded', !isExpanded);
+                    
+                    if (isExpanded) {
+                        legendPanel.style.display = 'none';
+                    } else {
+                        legendPanel.style.display = 'block';
+                    }
+                });
+            }
+            
+            // Initialize data on page load
+            (async () => {
+                await loadAuthorities();
+                await loadRegionalCyclingNetwork();
+                await loadRegionalStreetLamps();
+            })();
+        });
+    </script>
+</body>
+</html>
