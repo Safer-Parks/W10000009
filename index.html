@@ -423,6 +423,7 @@
                 </div>
                 
                 <button id="resetMapBtn" class="secondary" style="width:100%; margin-top:1rem;">Return to authority overview</button>
+                <!-- GitHub link will be inserted here by loadAuthorities() -->
             </div>
         </div>
     </aside>
@@ -605,7 +606,8 @@
         // THIS IS WHERE I NEED TO UPDATE FOR EACH REGION!!!
         async function loadAuthorities() {
             try {
-                const response = await fetch('W10000009_lut.geojson');
+                const lutFilename = 'W10000009_lut.geojson';
+                const response = await fetch(lutFilename);
                 const geojson = await response.json();
                 
                 mapState.authorities = geojson.features.map(feature => ({
@@ -626,7 +628,39 @@
                     select.appendChild(option);
                 });
                 
+                // Extract region code from LUT filename (e.g., 'W10000009_lut.geojson' -> 'E12000003')
+                const regionCode = lutFilename.replace('_lut.geojson', '');
+                const githubUrl = `https://github.com/Safer-Parks/${regionCode}`;
+                
+                // Add GitHub link to the menu
+                const githubLinkContainer = document.createElement('div');
+                githubLinkContainer.style.marginTop = '1rem';
+                githubLinkContainer.style.paddingTop = '1rem';
+                githubLinkContainer.style.borderTop = '1px solid #ddd';
+                githubLinkContainer.style.textAlign = 'center';
+                
+                const githubLink = document.createElement('a');
+                githubLink.href = githubUrl;
+                githubLink.textContent = 'Download this data';
+                githubLink.target = '_blank';
+                githubLink.rel = 'noopener noreferrer';
+                githubLink.style.color = '#572B70';
+                githubLink.style.textDecoration = 'none';
+                githubLink.style.fontWeight = 'bold';
+                githubLink.style.display = 'block';
+                
+                githubLink.addEventListener('hover', function() {
+                    this.style.textDecoration = 'underline';
+                });
+                
+                githubLinkContainer.appendChild(githubLink);
+                
+                // Add the container to the controls panel
+                const controlsContent = document.getElementById('controls-content');
+                controlsContent.appendChild(githubLinkContainer);
+                
                 console.log(`Loaded ${mapState.authorities.length} authorities`);
+                console.log(`GitHub repository: ${githubUrl}`);
             } catch (error) {
                 console.error('Error loading authorities:', error);
             }
