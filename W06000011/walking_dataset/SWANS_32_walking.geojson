@@ -1,0 +1,12 @@
+{
+"type": "FeatureCollection",
+"name": "SWANS_32_walking",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{"type":"Feature","properties":{"highway":"footway","name":null,"category":"Footpath (pedestrian only)"},"geometry":{"type":"MultiLineString","coordinates":[[[-3.8897169,51.6759094],[-3.8898877,51.6758048],[-3.8901306,51.6756456],[-3.8903244,51.67544],[-3.8904855,51.6752039],[-3.8905345,51.6751779],[-3.8905719,51.6752619],[-3.8906443,51.6753676],[-3.8906863,51.6754501],[-3.8906595,51.6756073]]]}},
+{"type":"Feature","properties":{"highway":"footway","name":null,"category":"Footpath (pedestrian only)"},"geometry":{"type":"MultiLineString","coordinates":[[[-3.8905345,51.6751779],[-3.8903757,51.6749998],[-3.8901163,51.6749749]]]}},
+{"type":"Feature","properties":{"highway":"footway","name":null,"category":"Footpath (pedestrian only)"},"geometry":{"type":"MultiLineString","coordinates":[[[-3.8905345,51.6751779],[-3.8907867,51.675049],[-3.8911883,51.6750476],[-3.8913494,51.6750476],[-3.8914638,51.6750331],[-3.8915689,51.6750056],[-3.891674,51.6749505],[-3.891751,51.6748753],[-3.8918024,51.6747884],[-3.8918466,51.6747118]]]}},
+{"type":"Feature","properties":{"highway":"footway","name":null,"category":"Footpath (pedestrian only)"},"geometry":{"type":"MultiLineString","coordinates":[[[-3.8907867,51.675049],[-3.8903757,51.6749998]]]}},
+{"type":"Feature","properties":{"highway":"footway","name":null,"category":"Footpath (pedestrian only)"},"geometry":{"type":"MultiLineString","coordinates":[[[-3.8906398,51.6763674],[-3.890578,51.6768128],[-3.8907563,51.6768486]]]}}
+]
+}

@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "NEAPO_1_walking",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{"type":"Feature","properties":{"highway":"path","name":null,"category":"Shared path"},"geometry":{"type":"MultiLineString","coordinates":[[[-3.7659712,51.6840114],[-3.7659701,51.6840553],[-3.765903,51.6844758],[-3.7663898,51.6847871],[-3.7663843,51.6848362]]]}}
+]
+}

@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"name": "SWANS_10_cycling",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{"type":"Feature","properties":{"highway":"track","name":null,"category":"Track"},"geometry":{"type":"MultiLineString","coordinates":[[[-3.9515012,51.6468992],[-3.9514382,51.6472148],[-3.9514252,51.6474534],[-3.9514797,51.6478371],[-3.9516254,51.6482605],[-3.9517682,51.6483888],[-3.9520699,51.6487439],[-3.9522466,51.6489713],[-3.9524797,51.6491469],[-3.95263,51.6492361],[-3.9528481,51.649439],[-3.9528983,51.6495858]]]}},
+{"type":"Feature","properties":{"highway":"path","name":null,"category":"Shared path"},"geometry":{"type":"MultiLineString","coordinates":[[[-3.9456348,51.6609275],[-3.9453031,51.6606571]]]}},
+{"type":"Feature","properties":{"highway":"path","name":null,"category":"Shared path"},"geometry":{"type":"MultiLineString","coordinates":[[[-3.9413993,51.6523251],[-3.9410265,51.6524722],[-3.9408773,51.6525339],[-3.9406879,51.6525207],[-3.9404677,51.6524722],[-3.9402902,51.6524781],[-3.940137,51.6524974]]]}}
+]
+}
