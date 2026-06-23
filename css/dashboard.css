@@ -102,3 +102,32 @@
     border: none !important;
     box-shadow: none !important;
 }
+
+/* Modal content headings */
+.modal-box .modal-content h2,
+.modal-box .modal-content h3,
+.modal-box .modal-content h4 {
+    font-family: 'MrDodo', serif !important;
+    color: #572B70 !important;
+    margin-top: 1rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.modal-box .modal-content h2 {
+    font-size: 1.2rem !important;
+}
+
+.modal-box .modal-content h3 {
+    font-size: 1.1rem !important;
+}
+
+.modal-box .modal-content h4 {
+    font-size: 1rem !important;
+}
+
+/* Modal box sizing */
+.modal-box {
+    max-width: 650px !important;
+    width: 95% !important;
+    padding: 2rem 2rem 2rem 3rem !important;
+}
