@@ -3121,11 +3121,11 @@
                     visibilityGroup.style.marginBottom = '0.75rem';
                     visibilityGroup.appendChild(label);
                     
-                    // Create gradient bar
+                    // Create gradient bar using full viridis palette with opacity matching hex display (0.6)
                     const gradientBar = document.createElement('div');
                     gradientBar.style.width = '100%';
                     gradientBar.style.height = '20px';
-                    gradientBar.style.background = 'linear-gradient(to right, #440154, #31688e, #35b779, #fde724)';
+                    gradientBar.style.background = 'linear-gradient(to right, rgba(68, 1, 84, 0.6), rgba(72, 39, 119, 0.6), rgba(59, 82, 139, 0.6), rgba(45, 112, 142, 0.6), rgba(32, 144, 140, 0.6), rgba(31, 167, 141, 0.6), rgba(53, 183, 121, 0.6), rgba(110, 206, 88, 0.6), rgba(181, 222, 43, 0.6), rgba(253, 231, 36, 0.6))';
                     gradientBar.style.borderRadius = '4px';
                     gradientBar.style.marginBottom = '0.25rem';
                     visibilityGroup.appendChild(gradientBar);
