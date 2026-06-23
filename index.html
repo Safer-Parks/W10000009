@@ -1104,6 +1104,8 @@
             <button class="modal-close-btn" aria-label="Close modal">&times;</button>
             <h3 class="modal-title">Demographics (15 min walking catchment)</h3>
             Please note that we are building a more intuitive visualisation for the demographics dataset. Please click on the demographics catchment area to see a pop-up with demographics data.
+            Currently the pop-up shows the LQ (defined below) and a symbol showing how this difers from the local authority demographics.
+            <hr>
             <div class="modal-content" id="content-demographics">
                 <section id="what-is-this-layer-6" class="level3">
                 <h3 class="anchored" data-anchor-id="what-is-this-layer-6">What is this layer?</h3>
@@ -3213,22 +3215,52 @@
                                 lineCap: 'round'
                             });
                             
-                            // Build popup content with all properties as a bulleted list
+                            // Build popup content with LQ values and symbols
                             const props = feature.properties;
-                            let bulletList = '<ul style="margin: 4px 0; padding-left: 20px;">';
                             
-                            // Add each property as a bullet point
+                            // Create a table with demographic variables and their LQ values
+                            let tableRows = '';
                             for (const [key, value] of Object.entries(props)) {
-                                // Format the key for display (remove underscores, add spaces)
-                                const displayKey = key.replace(/_/g, ' ');
-                                bulletList += `<li style="margin: 2px 0;"><strong>${displayKey}:</strong> ${value}</li>`;
+                                if (key.toLowerCase().includes('lq') && typeof value === 'number') {
+                                    // Extract the demographic variable name (remove _lq suffix)
+                                    const varName = key.replace(/_lq$/i, '').replace(/_/g, ' ');
+                                    const displayName = varName.charAt(0).toUpperCase() + varName.slice(1);
+                                    
+                                    // Determine symbol based on LQ value
+                                    let symbol = '';
+                                    if (value > 1.05) symbol = '↑'; // Significantly higher
+                                    else if (value < 0.95) symbol = '↓'; // Significantly lower
+                                    
+                                    tableRows += `
+                                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                                            <td style="padding: 6px 8px; text-align: left;">${displayName}</td>
+                                            <td style="padding: 6px 8px; text-align: center; font-weight: bold;">${value.toFixed(2)}</td>
+                                            <td style="padding: 6px 8px; text-align: center;">${symbol}</td>
+                                        </tr>
+                                    `;
+                                }
                             }
                             
-                            bulletList += '</ul>';
-                            
                             const popupContent = `
-                                <div style="font-family: Arial, sans-serif; font-size: 12px; width: 250px; max-height: 300px; overflow-y: auto;">
-                                    ${bulletList}
+                                <div style="font-family: Arial, sans-serif; font-size: 12px; max-width: 400px; max-height: 400px; overflow-y: auto;">
+                                    <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #ddd;">
+                                        <h4 style="margin: 0 0 8px 0; color: #572B70; font-weight: bold;">Significance indicators:</h4>
+                                        <p style="margin: 4px 0;"><strong>↑</strong> = Significantly higher than the Local Authority average</p>
+                                        <p style="margin: 4px 0;"><strong>↓</strong> = Significantly lower than the Local Authority average</p>
+                                        <p style="margin: 4px 0;">No symbol = Not significantly different from the Local Authority average</p>
+                                    </div>
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="border-bottom: 2px solid #572B70;">
+                                                <th style="padding: 8px 8px; text-align: left; color: #572B70; font-weight: bold;">Demographic</th>
+                                                <th style="padding: 8px 8px; text-align: center; color: #572B70; font-weight: bold;">LQ</th>
+                                                <th style="padding: 8px 8px; text-align: center; color: #572B70; font-weight: bold;">Sig</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${tableRows}
+                                        </tbody>
+                                    </table>
                                 </div>
                             `;
                             
