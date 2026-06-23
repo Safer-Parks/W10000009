@@ -3231,8 +3231,8 @@
                                     
                                     // Determine symbol based on LQ value
                                     let symbol = '';
-                                    if (value > 1.05) symbol = '↑'; // Significantly higher
-                                    else if (value < 0.95) symbol = '↓'; // Significantly lower
+                                    if (value > 1.2) symbol = '↑'; // Significantly higher
+                                    else if (value < 0.8) symbol = '↓'; // Significantly lower
                                     
                                     tableRows += `
                                         <tr style="border-bottom: 1px solid #e0e0e0;">
