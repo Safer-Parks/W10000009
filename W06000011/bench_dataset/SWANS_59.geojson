@@ -1,0 +1,9 @@
+{
+"type": "FeatureCollection",
+"name": "SWANS_59",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "osm_id": 5033172945, "name": null, "amenity": "bench", "man_made": null, "leisure": null, "playground": null, "memorial": null }, "geometry": { "type": "Point", "coordinates": [ -4.0423672, 51.6682838 ] } },
+{ "type": "Feature", "properties": { "osm_id": 5033172946, "name": null, "amenity": "bench", "man_made": null, "leisure": null, "playground": null, "memorial": null }, "geometry": { "type": "Point", "coordinates": [ -4.0423631, 51.6684015 ] } }
+]
+}
