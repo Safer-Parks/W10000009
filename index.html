@@ -264,6 +264,20 @@
             border-top-color: rgba(0, 123, 255, 0.95) !important;
         }
 
+        /* Bench tooltip styling */
+        .bench-tooltip {
+            background: rgba(76, 175, 80, 0.95) !important;
+            color: white !important;
+            border-radius: 4px;
+            padding: 8px 12px !important;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .bench-tooltip::before {
+            border-top-color: rgba(76, 175, 80, 0.95) !important;
+        }
+
         /* Cycling network tooltip styling */
         .cycling-tooltip {
             background: rgba(255, 107, 53, 0.95) !important;
@@ -999,6 +1013,36 @@
                 Toilet data comes from Toilet map (https://www.toiletmap.org.uk/dataset) © 2025 –CC BY 4.0. No changes made to the data,
                 but spatially filtered to only show toilets within a 15 minute walk of the park.
                 For more information, see https://www.toiletmap.org.uk/.
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-benchFacilities">
+        <div class="modal-box">
+            <button class="modal-close-btn" aria-label="Close modal">&times;</button>
+            <h3 class="modal-title">Benches &amp; Picnic Tables</h3>
+            <div class="modal-content" id="content-benchFacilities">
+                <section id="what-is-this-layer-10" class="level3">
+                <h3 class="anchored" data-anchor-id="what-is-this-layer-10">What is this layer?</h3>
+                <p>The location of seating within parks. The layer is displayed as points.</p>
+                </section>
+                <section id="how-to-use-this-information-10" class="level3">
+                <h3 class="anchored" data-anchor-id="how-to-use-this-information-10">How to use this information</h3>
+                <p>Seating encourages people to spend time in the park, supporting activity, comfort and a sense of belonging. Well-used seating areas can also provide greater ‘eyes on the park’, helping spaces feel safer.</p>
+                <p>Use this layer to understand where seating is—and is not—located within your chosen park. Consider:</p>
+                <ul>
+                <li><p><strong>Gaps in seating:</strong> Are there areas with no or limited seating? Lack of seating may discourage use, particularly by women, older people, parents, and disabled users (See <a href="https://www.greenflagaward.org/media/j0mbuudi/250908_safer-parks_pcpi_single.pdf#page=44">Belonging and Familiarity: The Safer Parks guidance</a>).</p></li>
+                <li><p><strong>Location and safety:</strong> Is seating located in visible, well-lit areas? Seating in concealed or isolated spots may feel unsafe or attract unwanted behaviour (See <a href="https://www.greenflagaward.org/media/j0mbuudi/250908_safer-parks_pcpi_single.pdf#page=24">Visibility and Openness: The Safer Parks guidance</a>)</p></li>
+                <li><p><strong>Accessibility and diversity of seating:</strong> Does the type and distribution of seating meet a range of needs? Features such as circular seating, back-rests accessible picnic tables, and shelter from sun or rain can support inclusive use. Consider this alongside the Demographics Data layer (See <a href="https://www.greenflagaward.org/media/j0mbuudi/250908_safer-parks_pcpi_single.pdf#page=52">Access and Location: The Safer Parks guidance</a>).</p></li>
+                </ul>
+                </section>
+                <section id="what-layers-could-be-combined-8" class="level3">
+                <h3 class="anchored" data-anchor-id="what-layers-could-be-combined-8">What layers could be combined?</h3>
+                <p>For deeper insight, use alongside the <em>Visibility Analysis, Foliage,</em> <em>Predicted Route Popularity</em>, and <em>Street Lighting</em> layers.</p>
+                <h3 class="anchored" data-anchor-id="where-is-the-data-from-2">Where is the data from?</h3>
+                <p>This layer uses Ordnance Survey and OpenStreetMap.</p>
+                </section>
+            </div>
         </div>
     </div>
 
@@ -1566,6 +1610,34 @@
                 
                 // Store for use in tooltip generation
                 mapState.parksWithToilets = parksWithToilets;
+
+                // Check which parks have bench data available
+                const parksWithBenches = new Set();
+                try {
+                    // Try to fetch the bench dataset directory listing
+                    // We'll check each park's bench file existence asynchronously
+                    const benchChecks = parks.map(async (park) => {
+                        try {
+                            const benchFilename = `bench_dataset/${park.id}.geojson`;
+                            const response = await fetch(`${authPath}${benchFilename}`);
+                            if (response.ok) {
+                                parksWithBenches.add(park.id);
+                            }
+                        } catch (error) {
+                            // File doesn't exist or can't be checked, skip
+                        }
+                    });
+                    
+                    // Wait for all bench checks to complete
+                    await Promise.all(benchChecks);
+                    console.log(`Parks with bench data: ${parksWithBenches.size}`);
+                    console.log(`Park IDs with benches:`, Array.from(parksWithBenches));
+                } catch (error) {
+                    console.log('Could not check for bench datasets');
+                }
+                
+                // Store for use in tooltip generation
+                mapState.parksWithBenches = parksWithBenches;
                 
                 // Remove existing all parks layer
                 if (mapState.allParksLayer) {
@@ -1608,6 +1680,9 @@
                         const parkData = mapState.sortedParks.find(p => p.name === parkName);
                         if (parkData && mapState.parksWithToilets && mapState.parksWithToilets.has(parkData.id)) {
                             tooltipContent += '<br/>Nearby toilet';
+                        }
+                        if (parkData && mapState.parksWithBenches && mapState.parksWithBenches.has(parkData.id)) {
+                            tooltipContent += '<br/>Has benches';
                         }
                         
                         layer.bindTooltip(tooltipContent, { 
@@ -1759,6 +1834,9 @@
             // Load toilet dataset and wait for it to complete
             await loadToiletDataset(selectedPark);
             
+            // Load benches dataset and wait for it to complete
+            await loadBenchesDataset(selectedPark);
+            
             // Load cycling dataset and wait for it to complete
             await loadCyclingDataset(selectedPark);
             
@@ -1781,6 +1859,9 @@
             }
             if (mapState.toiletLayer) {
                 layerToggles.push(mapState.toiletLayer);
+            }
+            if (mapState.benchesLayer) {
+                layerToggles.push(mapState.benchesLayer);
             }
             if (mapState.cyclingLayer) {
                 layerToggles.push(mapState.cyclingLayer);
@@ -2531,6 +2612,108 @@
                 }
             } catch (error) {
                 console.error('Error in loadToiletDataset:', error);
+            }
+        }
+        
+        // Load Benches dataset for selected park
+        async function loadBenchesDataset(park) {
+            try {
+                console.log(`loadBenchesDataset called for park: ${park.name} (ID: ${park.id})`);
+                
+                if (!park.id) {
+                    console.log(`No park ID found for bench loading`);
+                    return;
+                }
+                
+                // Remove existing benches layer
+                if (mapState.benchesLayer && mapState.benchesLayer.layer) {
+                    map.removeLayer(mapState.benchesLayer.layer);
+                }
+                
+                const authPath = getAuthorityPath(mapState.currentAuthority.id);
+                console.log(`Auth path for bench loading: ${authPath}`);
+                
+                // Load bench file from bench_dataset directory
+                // Path format: {authorityId}/bench_dataset/{parkId}.geojson
+                const benchFilename = `bench_dataset/${park.id}.geojson`;
+                const fullBenchPath = `${authPath}${benchFilename}`;
+                console.log(`Attempting to load benches from: ${fullBenchPath}`);
+                
+                try {
+                    const response = await fetch(fullBenchPath);
+                    console.log(`Bench file fetch response status: ${response.status}`);
+                    
+                    if (!response.ok) {
+                        console.log(`Bench file not found: ${benchFilename} (this is OK - not all parks have bench data)`);
+                        return;
+                    }
+                    
+                    const benchData = await response.json();
+                    console.log(`Bench data loaded, features count: ${benchData.features ? benchData.features.length : 0}`);
+                    
+                    if (!benchData.features || benchData.features.length === 0) {
+                        console.log(`No bench data found for park: ${park.name}`);
+                        return;
+                    }
+                    
+                    // Create feature group for bench markers
+                    const benchGroup = L.featureGroup();
+                    
+                    // Create icon for benches
+                    const brownSquareIcon = L.icon({
+                        iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHJ4PSIyIiBmaWxsPSIjOEI2RjQ3Ii8+PC9zdmc+',
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12],
+                        popupAnchor: [0, -12]
+                    });
+                    
+                    benchData.features.forEach(feature => {
+                        const coords = feature.geometry.coordinates; // GeoJSON: [lng, lat]
+                        const benchCoords = [coords[1], coords[0]]; // Convert to [lat, lng]
+                        const props = feature.properties;
+                        
+                        // Build popup content
+                        let popupContent = `<strong>Bench</strong><br/>`;
+                        if (props.name) {
+                            popupContent = `<strong>${props.name}</strong><br/>`;
+                        }
+                        popupContent += `<strong>Type:</strong> Bench<br/>`;
+                        
+                        // Create marker
+                        const marker = L.marker(benchCoords, { icon: brownSquareIcon });
+                        marker.bindPopup(popupContent);
+                        marker.bindTooltip('Bench', { 
+                            permanent: false, 
+                            direction: 'top',
+                            className: 'bench-tooltip'
+                        });
+                        
+                        benchGroup.addLayer(marker);
+                    });
+                    
+                    // Store layer info for toggling
+                    mapState.benchesLayer = {
+                        id: 'benches',
+                        name: 'Benches & Picnic Tables',
+                        layer: benchGroup,
+                        visible: false
+                    };
+                    
+                    console.log(`Successfully loaded and stored ${benchData.features.length} benches for ${park.name}`);
+                    console.log(`Benches layer stored in mapState:`, mapState.benchesLayer);
+                } catch (error) {
+                    console.error('Error loading bench data:', error);
+                    console.error('Error details:', {
+                        message: error.message,
+                        stack: error.stack
+                    });
+                }
+            } catch (error) {
+                console.error('Error in loadBenchesDataset:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack
+                });
             }
         }
         
@@ -3406,6 +3589,7 @@
                 'foliage-tall-hexagons': 'modal-foliageTall',
                 'nach-network': 'modal-nachNetwork',
                 'toilet-facilities': 'modal-toiletFacilities',
+                'benches': 'modal-benchFacilities',
                 'park-cycling': 'modal-cyclingRoutes',
                 'park-walking': 'modal-walkingRoutes',
                 'supplemental-lighting': 'modal-supplementalLighting',
@@ -3612,6 +3796,22 @@
                 } catch (error) {
                     console.error('Error toggling toilet layer:', error);
                 }
+            } else if (layerId === 'benches' && mapState.benchesLayer) {
+                const layerObj = mapState.benchesLayer;
+                console.log('Benches layer found, toggling visibility:', visible);
+                
+                try {
+                    if (visible) {
+                        layerObj.layer.addTo(map);
+                        console.log('Benches layer added to map');
+                    } else {
+                        map.removeLayer(layerObj.layer);
+                        console.log('Benches layer removed from map');
+                    }
+                    layerObj.visible = visible;
+                } catch (error) {
+                    console.error('Error toggling benches layer:', error);
+                }
             } else if (layerId === 'cycling-network' && mapState.cyclingNetworkLayer) {
                 const layerObj = mapState.cyclingNetworkLayer;
                 console.log('Cycling network layer found, toggling visibility:', visible);
@@ -3793,6 +3993,14 @@
                     id: 'toilet-facilities',
                     name: 'Toilet Facilities',
                     type: 'toilet'
+                });
+            }
+            
+            if (mapState.benchesLayer && mapState.benchesLayer.visible) {
+                visibleLayers.push({
+                    id: 'benches',
+                    name: 'Benches',
+                    type: 'bench'
                 });
             }
             
@@ -4106,6 +4314,29 @@
                     
                     toiletGroup.appendChild(toiletMarker);
                     legendItems.appendChild(toiletGroup);
+                    return;
+                } else if (layer.type === 'bench') {
+                    // Create benches legend
+                    const benchGroup = document.createElement('div');
+                    benchGroup.style.marginBottom = '0.75rem';
+                    
+                    // Create marker
+                    const benchMarker = document.createElement('div');
+                    benchMarker.style.display = 'flex';
+                    benchMarker.style.alignItems = 'center';
+                    benchMarker.style.gap = '0.5rem';
+                    
+                    const square = document.createElement('div');
+                    square.style.width = '16px';
+                    square.style.height = '16px';
+                    square.style.backgroundColor = '#8B6F47';
+                    // circle.style.borderRadius = '50%';
+                    
+                    benchMarker.appendChild(square);
+                    benchMarker.appendChild(document.createTextNode('Benches & Picnic Tables'));
+                    
+                    benchGroup.appendChild(benchMarker);
+                    legendItems.appendChild(benchGroup);
                     return;
                 } else if (layer.type === 'park-cycling') {
                     // Create cycling routes legend
