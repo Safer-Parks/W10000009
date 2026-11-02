@@ -4,7 +4,7 @@ Regional dataset for the [Safer Parks Dashboard](https://safer-parks.github.io/)
 
 ## Citation
 
-> Francesca Pontin, Anna Barker, Melissa Barrientos, Victoria Houlden, Maeve Murphy Quinlan (2026): The Safer Parks Dashboard Data: South Wales West, (Version V0.1.0). University of Leeds. DOI HERE. Accessed: *Insert today's date*.
+> Francesca Pontin, Anna Barker, Melissa Barrientos-Trinanes, Victoria Houlden, Maeve Murphy Quinlan (2026): The Safer Parks Dashboard Data: South Wales West, (Version V0.1.0). University of Leeds. DOI HERE. Accessed: *Insert today's date*.
 
 | Field | Value |
 |------------------------------------|------------------------------------|
