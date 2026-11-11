@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "SWANS_10_cycling",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "osm_id": 48976742, "highway": "residential", "name": "Parkhill Terrace", "category": "Cycle lane on street", "bicycle": null, "access": null, "foot": null, "designatn": null, "segregatd": null, "surface": "asphalt" }, "geometry": { "type": "LineString", "coordinates": [ [ -3.9509027, 51.6476313 ], [ -3.9508702, 51.6477269 ], [ -3.9508554, 51.6478065 ], [ -3.9508779, 51.647942 ], [ -3.9510784, 51.6485096 ], [ -3.9512356, 51.6489544 ], [ -3.9513816, 51.6493772 ], [ -3.951585, 51.6499662 ], [ -3.9518411, 51.6507077 ], [ -3.9521564, 51.6516205 ] ] } }
+]
+}

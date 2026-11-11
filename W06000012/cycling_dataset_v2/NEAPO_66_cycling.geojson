@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"name": "NEAPO_66_cycling",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "osm_id": 70509150, "highway": "primary", "name": "Cadoxton Road", "category": "Signed cycle route", "bicycle": null, "access": null, "foot": null, "designatn": null, "segregatd": null, "surface": "asphalt" }, "geometry": { "type": "LineString", "coordinates": [ [ -3.8043419, 51.6703958 ], [ -3.8046896, 51.6702753 ], [ -3.8052467, 51.6700132 ], [ -3.806218, 51.6694955 ], [ -3.8070337, 51.6690696 ], [ -3.8076646, 51.6686965 ] ] } },
+{ "type": "Feature", "properties": { "osm_id": 70509183, "highway": "primary", "name": null, "category": "Signed cycle route", "bicycle": null, "access": null, "foot": null, "designatn": null, "segregatd": null, "surface": "asphalt" }, "geometry": { "type": "LineString", "coordinates": [ [ -3.8041174, 51.6704489 ], [ -3.8041293, 51.6704234 ], [ -3.8041534, 51.6704014 ], [ -3.8041874, 51.6703852 ], [ -3.8042262, 51.6703766 ], [ -3.8042673, 51.6703755 ], [ -3.8043071, 51.6703821 ], [ -3.8043419, 51.6703958 ], [ -3.8043703, 51.6704172 ], [ -3.8043859, 51.6704432 ], [ -3.8043871, 51.6704709 ], [ -3.8043738, 51.6704974 ], [ -3.8043473, 51.6705198 ], [ -3.8043136, 51.6705347 ], [ -3.8042742, 51.6705426 ], [ -3.8042328, 51.6705428 ], [ -3.8041932, 51.6705353 ], [ -3.8041591, 51.6705207 ], [ -3.8041336, 51.6705005 ], [ -3.8041189, 51.6704755 ], [ -3.8041174, 51.6704489 ] ] } },
+{ "type": "Feature", "properties": { "osm_id": 97099862, "highway": "bridleway", "name": null, "category": "Bridleway", "bicycle": null, "access": null, "foot": null, "designatn": null, "segregatd": null, "surface": null }, "geometry": { "type": "LineString", "coordinates": [ [ -3.8053633, 51.6742567 ], [ -3.8052926, 51.6740501 ] ] } }
+]
+}

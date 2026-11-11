@@ -1,0 +1,9 @@
+{
+"type": "FeatureCollection",
+"name": "SWANS_105_cycling",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "osm_id": 24645066, "highway": "residential", "name": "Milford Way", "category": "Traffic-free road", "bicycle": "yes", "access": "no", "foot": "yes", "designatn": null, "segregatd": null, "surface": null }, "geometry": { "type": "LineString", "coordinates": [ [ -3.9709756, 51.6563991 ], [ -3.9725552, 51.6568064 ] ] } },
+{ "type": "Feature", "properties": { "osm_id": 1463180263, "highway": "cycleway", "name": null, "category": "Dedicated cycleway", "bicycle": null, "access": null, "foot": null, "designatn": null, "segregatd": null, "surface": "asphalt" }, "geometry": { "type": "LineString", "coordinates": [ [ -3.989847, 51.6534037 ], [ -3.9896864, 51.6535989 ], [ -3.9897533, 51.6538489 ], [ -3.9897408, 51.654126 ], [ -3.9897719, 51.6543756 ], [ -3.9898553, 51.6546354 ], [ -3.990032, 51.6551108 ], [ -3.9902175, 51.6553148 ], [ -3.9903719, 51.6554332 ] ] } }
+]
+}
